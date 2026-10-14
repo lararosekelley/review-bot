@@ -1,0 +1,40 @@
+{
+  "id": "git-stk-203",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": 157,
+    "title": "feat(cli): restore stack from remote",
+    "body": "<!-- git-stk:closes -->\nCloses #151\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#146\",\"state\":\"merged\",\"title\":\"fix(stack): guard walk against metadata cycles\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/146\"},{\"id\":\"#147\",\"state\":\"merged\",\"title\":\"fix(cli): defer rename supersession to stack submit\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/147\"},{\"id\":\"#148\",\"state\":\"merged\",\"title\":\"fix(stack): share lock across worktrees\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/148\"},{\"id\":\"#150\",\"state\":\"merged\",\"title\":\"fix(stack): treat trunk as empty stack line\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/150\"},{\"id\":\"#152\",\"state\":\"merged\",\"title\":\"fix(cli): retry on transient merge fail\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/152\"},{\"id\":\"#153\",\"state\":\"merged\",\"title\":\"fix(docs): cursor in guide always restored\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/153\"},{\"id\":\"#154\",\"state\":\"merged\",\"title\":\"fix(docs): mention more flags in readme\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/154\"},{\"id\":\"#155\",\"state\":\"merged\",\"title\":\"fix(providers): parse host better pt. 2\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/155\"},{\"id\":\"#156\",\"state\":\"merged\",\"title\":\"feat(docs): add 'undo' guide tour\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/156\"},{\"id\":\"#157\",\"state\":\"merged\",\"title\":\"feat(cli): restore stack from remote\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/157\"},{\"id\":\"#158\",\"state\":\"merged\",\"title\":\"feat(cli): list shows review numbers\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/158\"},{\"id\":\"#159\",\"state\":\"merged\",\"title\":\"feat(cli): add credits command\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/159\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): add credits command (#159)](https://github.com/lararosekelley/git-stk/pull/159)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): list shows review numbers (#158)](https://github.com/lararosekelley/git-stk/pull/158)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): restore stack from remote (#157)](https://github.com/lararosekelley/git-stk/pull/157)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[feat(docs): add 'undo' guide tour (#156)](https://github.com/lararosekelley/git-stk/pull/156)~~ (merged)\n- \ud83d\udfe3 ~~[fix(providers): parse host better pt. 2 (#155)](https://github.com/lararosekelley/git-stk/pull/155)~~ (merged)\n- \ud83d\udfe3 ~~[fix(docs): mention more flags in readme (#154)](https://github.com/lararosekelley/git-stk/pull/154)~~ (merged)\n- \ud83d\udfe3 ~~[fix(docs): cursor in guide always restored (#153)](https://github.com/lararosekelley/git-stk/pull/153)~~ (merged)\n- \ud83d\udfe3 ~~[fix(cli): retry on transient merge fail (#152)](https://github.com/lararosekelley/git-stk/pull/152)~~ (merged)\n- \ud83d\udfe3 ~~[fix(stack): treat trunk as empty stack line (#150)](https://github.com/lararosekelley/git-stk/pull/150)~~ (merged)\n- \ud83d\udfe3 ~~[fix(stack): share lock across worktrees (#148)](https://github.com/lararosekelley/git-stk/pull/148)~~ (merged)\n- \ud83d\udfe3 ~~[fix(cli): defer rename supersession to stack submit (#147)](https://github.com/lararosekelley/git-stk/pull/147)~~ (merged)\n- \ud83d\udfe3 ~~[fix(stack): guard walk against metadata cycles (#146)](https://github.com/lararosekelley/git-stk/pull/146)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "e448c0bd00838336866bf2f80fc34671d5abcaf3",
+    "head_sha": "d6d4d6fa4434bf97a69f61d4c3f982f5954216a4",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 203,
+    "sha": "9ff15562381aa488798e69700036d3684409e62b"
+  },
+  "expected": [
+    {
+      "path": "src/stack/mod.rs",
+      "line": 371,
+      "window": 5,
+      "alt": [
+        {
+          "path": "src/stack/mod.rs",
+          "line": 380
+        }
+      ],
+      "description": "apply_remote_metadata passes branch and parent names read from untrusted remote metadata straight to git fetch/config, so a name like `--upload-pack=...` is parsed as a git option (argument injection).",
+      "severity": "high",
+      "visibility": "high",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

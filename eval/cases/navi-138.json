@@ -1,0 +1,35 @@
+{
+  "id": "navi-138",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(github): add github source with notifications poll and timeline diff",
+    "body": "",
+    "base_sha": "f97c2685701ae6f8e3a43e88510a6c92ca6e9b64",
+    "head_sha": "244e1c45f83fef5f54b47fbde48206fa5aa12e3e",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 138,
+    "sha": "af3bc2b03d6fcb6fd0a4be3b271a2b85c718a49d"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-github/src/source.rs",
+      "line": 41,
+      "window": 5,
+      "alt": [],
+      "description": "The GitHub client is built without connect/read timeouts, so a half-open connection hangs the poll and wedges the daemon forever.",
+      "severity": "high",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

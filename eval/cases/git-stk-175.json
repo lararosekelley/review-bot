@@ -1,0 +1,40 @@
+{
+  "id": "git-stk-175",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 94,
+    "title": "chore(cli): make merge --wait more durable",
+    "body": "<!-- git-stk:closes -->\nCloses #93\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#94\",\"state\":\"merged\",\"title\":\"chore(cli): make merge --wait more durable\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/94\"}] -->\n- \ud83d\udfe3 ~~[chore(cli): make merge --wait more durable (#94)](https://github.com/lararosekelley/git-stk/pull/94)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "5ca54bccf669e799d62dec86c243a036a17bb2b1",
+    "head_sha": "e12851e3ff9681f288d57775a4970a079f41c02a",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 175,
+    "sha": "513a45e6c12249b0976c261422a6071bfaeb2372"
+  },
+  "expected": [
+    {
+      "path": "src/providers/github.rs",
+      "line": 72,
+      "window": 5,
+      "alt": [
+        {
+          "path": "src/providers/gitlab.rs",
+          "line": 87
+        }
+      ],
+      "description": "The wait_for_checks poll loop has no overall timeout, so merge --wait hangs forever when checks stay pending.",
+      "severity": "medium",
+      "visibility": "high",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

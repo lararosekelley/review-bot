@@ -1,0 +1,38 @@
+{
+  "id": "navi-165",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 147,
+    "title": "fix(core): defer quiet-hours events instead of dropping them",
+    "body": "<!-- git-stk:description -->\nCloses #144.\n\nEvents suppressed by `rules.quiet_hours` were lost, not held. The filter dropped\nthem, the engine committed the source's snapshot anyway (only `DeliveryFailed`\nscopes are held back), and since every source derives events by diffing against\nthat snapshot, they could never re-derive. A review request at 02:00 with a\n23:00-08:00 window was silently discarded for good.\n\n## What changed\n\n`Decision` gains a `Defer(DeferReason)` variant, and quiet hours returns it\ninstead of `Drop`. `DropReason::QuietHours` is gone, since nothing produces it\nany more.\n\nThe engine buffers deferred events in their own state-store bucket\n(`__deferred__` / `pending`), alongside the existing digest buffer, and\n`Engine::flush_deferred` releases them. The daemon calls it once per poll pass,\nso an event surfaces within one interval of the window ending; `navi once` calls\nit too, and reports how many it released.\n\nThree details worth review:\n\n- **Deferred events are re-decided on flush, not on the way in.** That is what\n  makes per-repo `quiet_hours` overrides work without recording which window\n  deferred what, and it means a mute or repo deny added overnight still applies\n  on the way out. A buffered event whose rule now drops it is discarded.\n- **Quiet hours is evaluated last in `decide`.** Anything another rule would drop\n  is dropped, not parked, so the buffer only ever holds events the user wants.\n- **A deferred event is marked delivered when buffered**, because the snapshot is\n  about to advance past it. The buffer, not the snapshot, is what holds it from\n  then on, so a delivery failure on release keeps it buffered for the next flush\n  rather than discarding it.\n\n`--dry-run` reports `WouldDefer` distinctly from `WouldDeliver`, and writes\nnothing.\n\n## Ordering against the digest\n\nThe digest check stays ahead of the defer check: a kind the user chose to batch\nis already deferred by their own choice, and keeps the digest's cadence. The\ndigest flush itself still ignores quiet hours. That predates this change and is\nleft alone; worth a follow-up issue if you want the window to gate it.\n\n## Tests\n\nSix engine tests covering defer-then-release, the snapshot-advances regression\nthat motivated the issue, keep-on-delivery-failure, re-decide-on-flush, the\ndry-run path, and drop-wins-over-defer. Assertions read the buffer contents\ndirectly rather than trusting the flush's return count.\n\nI mutation-tested the four load-bearing branches (discard instead of keep on\nfailure; release without re-deciding; deliver an event a rule now drops; never\nbuffer at all). All four are caught. The first pass of tests missed a fifth\nmutant, which surfaced a real flaw: the buffer rewrite was gated on\n`delivered > 0 || dropped > 0`, making `keep` dead when every release failed.\nCorrect by accident. It is now gated on `keep.len() != buffered`.\n\n`just check` is clean: rustfmt, clippy `-D warnings`, markdownlint, full suite.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #144\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#151\",\"state\":\"closed\",\"title\":\"feat(state): prune aged-out snapshots and dedup rows daily\",\"url\":\"https://github.com/lararosekelley/navi/pull/151\"},{\"id\":\"#150\",\"state\":\"merged\",\"title\":\"chore(release): backfill the 0.3.3 changelog section\",\"url\":\"https://github.com/lararosekelley/navi/pull/150\"},{\"id\":\"#147\",\"state\":\"merged\",\"title\":\"fix(core): defer quiet-hours events instead of dropping them\",\"url\":\"https://github.com/lararosekelley/navi/pull/147\"},{\"id\":\"#163\",\"state\":\"closed\",\"title\":\"feat(state): prune aged-out snapshots and dedup rows daily\",\"url\":\"https://github.com/lararosekelley/navi/pull/163\"},{\"id\":\"#148\",\"state\":\"open\",\"title\":\"fix(core): key delivery dedup on the destination, not just the event\",\"url\":\"https://github.com/lararosekelley/navi/pull/148\"},{\"id\":\"#159\",\"state\":\"open\",\"title\":\"feat(state): prune poll bookkeeping for long-quiet PRs\",\"url\":\"https://github.com/lararosekelley/navi/pull/159\"},{\"id\":\"#154\",\"state\":\"open\",\"title\":\"fix(cli): let config set write known keys the file doesn't have yet\",\"url\":\"https://github.com/lararosekelley/navi/pull/154\"}] -->\n- \ud83d\udfe2 [fix(cli): let config set write known keys the file doesn't have yet (#154)](https://github.com/lararosekelley/navi/pull/154)\n- \ud83d\udfe2 [feat(state): prune poll bookkeeping for long-quiet PRs (#159)](https://github.com/lararosekelley/navi/pull/159)\n- \ud83d\udfe2 [fix(core): key delivery dedup on the destination, not just the event (#148)](https://github.com/lararosekelley/navi/pull/148)\n- \ud83d\udd34 ~~[feat(state): prune aged-out snapshots and dedup rows daily (#163)](https://github.com/lararosekelley/navi/pull/163)~~ (closed)\n- \ud83d\udfe3 ~~[fix(core): defer quiet-hours events instead of dropping them (#147)](https://github.com/lararosekelley/navi/pull/147)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[chore(release): backfill the 0.3.3 changelog section (#150)](https://github.com/lararosekelley/navi/pull/150)~~ (merged)\n- \ud83d\udd34 ~~[feat(state): prune aged-out snapshots and dedup rows daily (#151)](https://github.com/lararosekelley/navi/pull/151)~~ (closed)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "35cbf1047dbb7361c764deeeabd15f160ebc8375",
+    "head_sha": "cccf1c26254245383bb28436549862544c0ad29a",
+    "commits": 5
+  },
+  "fix": {
+    "pr": 165,
+    "sha": "cd6c427af5f8036cc4840b2ce09311ad21f54d98"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-core/src/engine.rs",
+      "line": 126,
+      "window": 5,
+      "alt": [],
+      "description": "Held digest events are released only on the digest interval, so a mixed flush with a daily interval phased inside quiet hours strands the held events.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "caught",
+    "comment_ids": [
+      3944252637,
+      5559882008
+    ],
+    "note": "bot named the residual stranding case; author deferred it to a follow-up"
+  }
+}

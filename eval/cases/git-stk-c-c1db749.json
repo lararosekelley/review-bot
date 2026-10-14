@@ -1,0 +1,40 @@
+{
+  "id": "git-stk-c-c1db749",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": null,
+    "title": "feat(providers): add review workflows",
+    "body": "",
+    "base_sha": "a55a6018d2d2c7fa1ed983ade59ccf0f407eee5c",
+    "head_sha": "7cc9a6b7bd0433267faf43db8577ef9617b5c3f4",
+    "commits": 1
+  },
+  "fix": {
+    "pr": null,
+    "sha": "c1db749d9c066b3c6f2f8d23c18f2f0529a580b7"
+  },
+  "expected": [
+    {
+      "path": "src/providers.rs",
+      "line": 93,
+      "window": 5,
+      "alt": [
+        {
+          "path": "src/providers.rs",
+          "line": 119
+        }
+      ],
+      "description": "review_for_branch only lists open pull/merge requests (gh pr list and glab mr list default to open), so cleanup never finds a review that has already merged.",
+      "severity": "high",
+      "visibility": "medium",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push, predates the bot"
+  }
+}

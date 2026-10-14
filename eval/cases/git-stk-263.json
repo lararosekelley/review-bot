@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-263",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": null,
+    "title": "chore(release): 0.7.4, close #74 with flag parity",
+    "body": "",
+    "base_sha": "bbae8c7d293a73ee640a78a2a73d695bfba54b6d",
+    "head_sha": "75f412bf3bd5c241cf9c2fe72a6ba18cf31304c7",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 263,
+    "sha": "5da79e709583e8fac45958121fea1f54d18a04a2"
+  },
+  "expected": [
+    {
+      "path": "src/stack/restack.rs",
+      "line": 87,
+      "window": 5,
+      "alt": [],
+      "description": "valid_base trusts any recorded fork point that is still an ancestor of the branch, even a stale one older than the live merge base, so restack replays commits already upstream and repair reports a stale base as valid.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push, predates the bot"
+  }
+}

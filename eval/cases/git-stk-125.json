@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-125",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 113,
+    "title": "feat(cli): self-hosted gitlab, linear/jira docs, nicer guide formatting on small terminals",
+    "body": "<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#113\",\"state\":\"merged\",\"title\":\"feat(cli): self-hosted gitlab, linear/jira docs, nicer guide formatting on small terminals\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/113\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): self-hosted gitlab, linear/jira docs, nicer guide formatting on small terminals (#113)](https://github.com/lararosekelley/git-stk/pull/113)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "1a991d85bce8653f0cea4749d368414cf844d760",
+    "head_sha": "2def14f61b0c00de24826f49de38183897f4f94b",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 125,
+    "sha": "97ce80e461cebce536743678c572edd36e0efe76"
+  },
+  "expected": [
+    {
+      "path": "src/providers/mod.rs",
+      "line": 167,
+      "window": 5,
+      "alt": [],
+      "description": "Provider detection checks whether the remote URL merely contains `github.com:` or `github.com/`, so look-alike hosts (mygithub.com, a path embedding github.com) are misdetected as GitHub or GitLab.",
+      "severity": "medium",
+      "visibility": "high",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

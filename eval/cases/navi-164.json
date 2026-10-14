@@ -1,0 +1,42 @@
+{
+  "id": "navi-164",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 99,
+    "title": "fix(source): defer involved-sweep pr: cursors until delivery",
+    "body": "Closes #98. Exactly-once on the involved-PR sweeps.\n\nThe involved-PR sweeps advanced their per-PR `pr:<scope>` cursor eagerly, before the engine confirmed delivery. A failed send moved the cursor past that PR's `updated_at`, so the next poll skipped it and the event was lost until the PR changed again (at-most-once).\n\n### Change\nThe `pr:` cursor now gets the same deferral the snapshots already have: `diff_swept_prs` stashes the intended advance in `pending_pr_cursors`, and `commit_snapshots` flushes it only for scopes **not** in `failed_scopes`. So a scope whose delivery failed keeps its old cursor *and* old snapshot, and re-derives next poll \u2014 genuine exactly-once. Applied to both sweep-based sources, GitHub and Gitea.\n\n### GitLab is unaffected\nGitLab's involved-MR sweep has no per-PR cursor \u2014 it uses a global `mr_since` window plus the (already-deferred) snapshot for per-MR dedup, so there's no eager per-PR cursor to fix here. (The issue text mentioned it; this clarifies.)\n\n### Tests\nGitHub and Gitea each assert the `pr:` cursor is `None` after `poll()` alone and only advances after `commit_snapshots` with no failed scopes.\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#99\",\"state\":\"merged\",\"title\":\"fix(source): defer involved-sweep pr: cursors until delivery\",\"url\":\"https://github.com/lararosekelley/navi/pull/99\"}] -->\n- \ud83d\udfe3 ~~[fix(source): defer involved-sweep pr: cursors until delivery (#99)](https://github.com/lararosekelley/navi/pull/99)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "6f8e62eba6907cc382f5895be5174bde363de6c5",
+    "head_sha": "21b051a9fa9b7abb3f0bd2430b188b548a92b8bc",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 164,
+    "sha": "a513761a76ff5edc940c611543234f10fb30693e"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-github/src/source.rs",
+      "line": 405,
+      "window": 5,
+      "alt": [
+        {
+          "path": "crates/navi-notifier-gitea/src/source.rs",
+          "line": 339
+        }
+      ],
+      "description": "The pr: cursor is staged even when process_pr swallowed a fetch failure, so the PR is skipped until it changes again and its event is lost.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "missed",
+    "comment_ids": [
+      5048424478
+    ],
+    "note": "summary found no actionable issues"
+  }
+}

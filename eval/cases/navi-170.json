@@ -1,0 +1,35 @@
+{
+  "id": "navi-170",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(gitea): add gitea/forgejo source reusing the forge engine",
+    "body": "",
+    "base_sha": "69368a0f67e840dcace2e891c95a9a32ab4e6f02",
+    "head_sha": "6ac3538d7bea049cc97e7172f5df2a7a084b23c4",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 170,
+    "sha": "85a1c5fd3197fe3052470db4db6c9427cc2dbac7"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-gitea/src/api.rs",
+      "line": 81,
+      "window": 5,
+      "alt": [],
+      "description": "Gitea requested_reviewers is null when empty (serde default does not cover null) and keeps listing reviewers after they review, so review requests parse wrongly.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

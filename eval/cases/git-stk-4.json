@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-4",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": null,
+    "title": "feat(cli): add shell completions subcommand (#1)",
+    "body": "",
+    "base_sha": "a67b2ec32317aae27462037be0e9a9106addc71a",
+    "head_sha": "fd09c386d5304f122289b9c75b1e323f68db02a6",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 4,
+    "sha": "3eeb8695863ef2e3003f6b5a4da225354bcc7246"
+  },
+  "expected": [
+    {
+      "path": "src/completions.rs",
+      "line": 15,
+      "window": 5,
+      "alt": [],
+      "description": "The bash git shim calls the clap completer with no positional arguments, but the completer reads the command, current word, and previous word from them, so `git stk <TAB>` completion does not work.",
+      "severity": "low",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push, predates the bot"
+  }
+}

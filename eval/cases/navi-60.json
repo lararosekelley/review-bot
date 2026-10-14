@@ -1,0 +1,35 @@
+{
+  "id": "navi-60",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(cli): add completions, setup, upgrade, downgrade, uninstall",
+    "body": "",
+    "base_sha": "b13334ec60037ee63405ac9632f5b52fb11142c9",
+    "head_sha": "b766245a6de5ff7c6d3619e36284517b65795f9d",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 60,
+    "sha": "7e509e1637efb1d2a7038967a20fc0314b143b2e"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/upgrade.rs",
+      "line": 38,
+      "window": 5,
+      "alt": [],
+      "description": "upgrade ignores its --force flag (_force) and always re-downloads and reinstalls even when already on the latest release.",
+      "severity": "low",
+      "visibility": "high",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

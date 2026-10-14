@@ -1,0 +1,35 @@
+{
+  "id": "navi-c-8547c19",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(github): add github source with notifications poll and timeline diff",
+    "body": "",
+    "base_sha": "f97c2685701ae6f8e3a43e88510a6c92ca6e9b64",
+    "head_sha": "244e1c45f83fef5f54b47fbde48206fa5aa12e3e",
+    "commits": 1
+  },
+  "fix": {
+    "pr": null,
+    "sha": "8547c1924722a47092997295e367fab8ef7012b3"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-github/src/source.rs",
+      "line": 260,
+      "window": 5,
+      "alt": [],
+      "description": "Any error message containing 403 is classified as a rate limit, so permission failures are silently retried instead of surfaced.",
+      "severity": "medium",
+      "visibility": "high",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

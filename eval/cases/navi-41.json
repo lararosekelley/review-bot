@@ -1,0 +1,40 @@
+{
+  "id": "navi-41",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(github): add github source with notifications poll and timeline diff",
+    "body": "",
+    "base_sha": "f97c2685701ae6f8e3a43e88510a6c92ca6e9b64",
+    "head_sha": "244e1c45f83fef5f54b47fbde48206fa5aa12e3e",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 41,
+    "sha": "020a713d44c843411f324049f45dfbb1902a527b"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-github/src/source.rs",
+      "line": 79,
+      "window": 5,
+      "alt": [
+        {
+          "path": "crates/navi-notifier-github/src/source.rs",
+          "line": 93
+        }
+      ],
+      "description": "Notification paging stops silently at MAX_PAGES while pages are still full, dropping notifications after a long gap without any warning.",
+      "severity": "low",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

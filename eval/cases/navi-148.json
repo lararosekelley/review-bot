@@ -1,0 +1,40 @@
+{
+  "id": "navi-148",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(core): add domain model, provider traits, rule filter, and engine",
+    "body": "",
+    "base_sha": "0beb6e077bf201cb830f00691be73c2379010067",
+    "head_sha": "f97c2685701ae6f8e3a43e88510a6c92ca6e9b64",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 148,
+    "sha": "48d95f50c7f9c0b2e492f7ddffcaff8c5bb3ca2c"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-core/src/engine.rs",
+      "line": 166,
+      "window": 5,
+      "alt": [
+        {
+          "path": "crates/navi-notifier-core/src/engine.rs",
+          "line": 224
+        }
+      ],
+      "description": "Delivery dedup is keyed on the event only, so after a partial fan-out failure the retry re-sends to destinations that already received it.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

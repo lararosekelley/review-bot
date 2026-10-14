@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-148",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 132,
+    "title": "chore(cli): add stack lock",
+    "body": "<!-- git-stk:closes -->\nCloses #128\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#120\",\"state\":\"merged\",\"title\":\"feat/docs cleanup\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/120\"},{\"id\":\"#124\",\"state\":\"merged\",\"title\":\"fix(cli): correct headers passed to git apply\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/124\"},{\"id\":\"#125\",\"state\":\"merged\",\"title\":\"fix(providers): parse host better\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/125\"},{\"id\":\"#129\",\"state\":\"merged\",\"title\":\"feat(docs): add adopt/re-parenting guide\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/129\"},{\"id\":\"#130\",\"state\":\"merged\",\"title\":\"fix(cli): offer to close dated PRs\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/130\"},{\"id\":\"#132\",\"state\":\"merged\",\"title\":\"chore(cli): add stack lock\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/132\"},{\"id\":\"#133\",\"state\":\"merged\",\"title\":\"chore(cli): ignore independent trunk-siblings in stk commands\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/133\"},{\"id\":\"#134\",\"state\":\"merged\",\"title\":\"feat(cli): add submit --rebuild-overview flag\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/134\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): add submit --rebuild-overview flag (#134)](https://github.com/lararosekelley/git-stk/pull/134)~~ (merged)\n- \ud83d\udfe3 ~~[chore(cli): ignore independent trunk-siblings in stk commands (#133)](https://github.com/lararosekelley/git-stk/pull/133)~~ (merged)\n- \ud83d\udfe3 ~~[chore(cli): add stack lock (#132)](https://github.com/lararosekelley/git-stk/pull/132)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[fix(cli): offer to close dated PRs (#130)](https://github.com/lararosekelley/git-stk/pull/130)~~ (merged)\n- \ud83d\udfe3 ~~[feat(docs): add adopt/re-parenting guide (#129)](https://github.com/lararosekelley/git-stk/pull/129)~~ (merged)\n- \ud83d\udfe3 ~~[fix(providers): parse host better (#125)](https://github.com/lararosekelley/git-stk/pull/125)~~ (merged)\n- \ud83d\udfe3 ~~[fix(cli): correct headers passed to git apply (#124)](https://github.com/lararosekelley/git-stk/pull/124)~~ (merged)\n- \ud83d\udfe3 ~~[feat/docs cleanup (#120)](https://github.com/lararosekelley/git-stk/pull/120)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "25453fff4c9fd4d2ceacddf72c74980a923afdad",
+    "head_sha": "27b0cf2ee2784f69b2dea178b84df24caa76c561",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 148,
+    "sha": "f1c8d65781624bd734aeb747aed0ccc25fe81c41"
+  },
+  "expected": [
+    {
+      "path": "src/lock.rs",
+      "line": 26,
+      "window": 5,
+      "alt": [],
+      "description": "The stack lock lives under the per-worktree git dir, so commands run from different worktrees of one repo take separate locks while mutating the shared branch config.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

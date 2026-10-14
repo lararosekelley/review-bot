@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-264",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 102,
+    "title": "feat(cli): git stk run command on all branches in stack",
+    "body": "<!-- git-stk:closes -->\nCloses #82\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#101\",\"state\":\"merged\",\"title\":\"fix(cli): handle queued checks on github for merge --wait\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/101\"},{\"id\":\"#102\",\"state\":\"merged\",\"title\":\"feat(cli): git stk run command on all branches in stack\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/102\"},{\"id\":\"#103\",\"state\":\"merged\",\"title\":\"feat(cli): list --all to list all stacks\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/103\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): list --all to list all stacks (#103)](https://github.com/lararosekelley/git-stk/pull/103)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): git stk run command on all branches in stack (#102)](https://github.com/lararosekelley/git-stk/pull/102)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[fix(cli): handle queued checks on github for merge --wait (#101)](https://github.com/lararosekelley/git-stk/pull/101)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "9dfa68fbb1dbf1f3e02d82753e6f686b8cd419ff",
+    "head_sha": "8dfcccc18afadbbcaf834ec2bf5485dab5b19efd",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 264,
+    "sha": "5587e2590c61c92ccca11facbbde16a09efaf92e"
+  },
+  "expected": [
+    {
+      "path": "src/commands/run.rs",
+      "line": 81,
+      "window": 5,
+      "alt": [],
+      "description": "run treats a command that fails to spawn (e.g. not found) as a failed run, reporting a bogus FAIL on every branch instead of the spawn error.",
+      "severity": "low",
+      "visibility": "high",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-237",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 178,
+    "title": "chore(code): stack helper consolidation",
+    "body": "<!-- git-stk:closes -->\nCloses #165\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#173\",\"state\":\"merged\",\"title\":\"chore(stability): structured errors for merge issues\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/173\"},{\"id\":\"#174\",\"state\":\"merged\",\"title\":\"fix(providers): don't fail on transient errors\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/174\"},{\"id\":\"#175\",\"state\":\"merged\",\"title\":\"fix(merge): no more infinite hang\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/175\"},{\"id\":\"#176\",\"state\":\"merged\",\"title\":\"chore(code): provider detection de-duping\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/176\"},{\"id\":\"#178\",\"state\":\"merged\",\"title\":\"chore(code): stack helper consolidation\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/178\"},{\"id\":\"#179\",\"state\":\"merged\",\"title\":\"chore(tests): new behavioral test coverage for lock/merge/repair\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/179\"},{\"id\":\"#180\",\"state\":\"merged\",\"title\":\"chore(code): standardize output around anstream over bare println\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/180\"},{\"id\":\"#182\",\"state\":\"merged\",\"title\":\"chore(cli): more consistent availability of --dry-run/-n in commands\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/182\"},{\"id\":\"#183\",\"state\":\"merged\",\"title\":\"chore(docs): better lock/hint grouping docs\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/183\"},{\"id\":\"#184\",\"state\":\"merged\",\"title\":\"chore(docs): fix some stale docs\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/184\"},{\"id\":\"#185\",\"state\":\"merged\",\"title\":\"fix(cli): handle stale lock from crash\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/185\"}] -->\n- \ud83d\udfe3 ~~[fix(cli): handle stale lock from crash (#185)](https://github.com/lararosekelley/git-stk/pull/185)~~ (merged)\n- \ud83d\udfe3 ~~[chore(docs): fix some stale docs (#184)](https://github.com/lararosekelley/git-stk/pull/184)~~ (merged)\n- \ud83d\udfe3 ~~[chore(docs): better lock/hint grouping docs (#183)](https://github.com/lararosekelley/git-stk/pull/183)~~ (merged)\n- \ud83d\udfe3 ~~[chore(cli): more consistent availability of --dry-run/-n in commands (#182)](https://github.com/lararosekelley/git-stk/pull/182)~~ (merged)\n- \ud83d\udfe3 ~~[chore(code): standardize output around anstream over bare println (#180)](https://github.com/lararosekelley/git-stk/pull/180)~~ (merged)\n- \ud83d\udfe3 ~~[chore(tests): new behavioral test coverage for lock/merge/repair (#179)](https://github.com/lararosekelley/git-stk/pull/179)~~ (merged)\n- \ud83d\udfe3 ~~[chore(code): stack helper consolidation (#178)](https://github.com/lararosekelley/git-stk/pull/178)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[chore(code): provider detection de-duping (#176)](https://github.com/lararosekelley/git-stk/pull/176)~~ (merged)\n- \ud83d\udfe3 ~~[fix(merge): no more infinite hang (#175)](https://github.com/lararosekelley/git-stk/pull/175)~~ (merged)\n- \ud83d\udfe3 ~~[fix(providers): don't fail on transient errors (#174)](https://github.com/lararosekelley/git-stk/pull/174)~~ (merged)\n- \ud83d\udfe3 ~~[chore(stability): structured errors for merge issues (#173)](https://github.com/lararosekelley/git-stk/pull/173)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "51db74966cdc648087de7e4291a8ef53ea777bf8",
+    "head_sha": "99e688cc4696644cb232be71471edc566ff2af46",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 237,
+    "sha": "0410c59ae927af8eed8b11e98efab64c0738fa3e"
+  },
+  "expected": [
+    {
+      "path": "src/stack/mod.rs",
+      "line": 295,
+      "window": 5,
+      "alt": [],
+      "description": "current_stack_branches anchors on stack_root, which is the trunk for a trunk-anchored stack, so it returns every sibling stack off the trunk and PR descriptions list unrelated branches.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

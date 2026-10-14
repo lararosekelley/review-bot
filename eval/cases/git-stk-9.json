@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-9",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(providers): delete cleaned branches",
+    "body": "",
+    "base_sha": "f5b78e2422b67b62e2841d422d386e664bf86a76",
+    "head_sha": "0dfa6140074cf66e780ed03e558a9f5ef73b78e2",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 9,
+    "sha": "914b27a4e3bf0d4632c795a0ed25767228d2c75b"
+  },
+  "expected": [
+    {
+      "path": "src/git.rs",
+      "line": 45,
+      "window": 5,
+      "alt": [],
+      "description": "delete_branch uses `git branch -d`, which refuses to delete a squash-merged branch whose commits are not ancestry-merged, so cleanup fails on landed branches.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push, predates the bot"
+  }
+}

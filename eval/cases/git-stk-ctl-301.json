@@ -1,0 +1,21 @@
+{
+  "id": "git-stk-ctl-301",
+  "repo": "lararosekelley/git-stk",
+  "kind": "control",
+  "split": "dev",
+  "pr": {
+    "number": 301,
+    "title": "feat(navigation): up/down take number of branches to move",
+    "body": "<!-- git-stk:description -->\nstk up/down now take an optional positional N arg to jump a certain number of branches\n<!-- /git-stk:description -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#301\",\"state\":\"merged\",\"title\":\"feat(navigation): up/down take number of branches to move\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/301\"}] -->\n- \ud83d\udfe3 ~~[feat(navigation): up/down take number of branches to move (#301)](https://github.com/lararosekelley/git-stk/pull/301)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "c7b82af394a350e1996e672e2f4e11b8ee3c3d17",
+    "head_sha": "c062bf1597c9b3b98bf1b15dcac6db739aa80350",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 1 summary comments during review"
+  }
+}

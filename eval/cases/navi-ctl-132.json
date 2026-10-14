@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-132",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 132,
+    "title": "refactor(core): share headline/thread_key/html_escape and add model tests",
+    "body": "refactor(core): share headline/thread_key/html_escape and add model tests\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#132\",\"state\":\"merged\",\"title\":\"refactor(core): share headline/thread_key/html_escape and add model tests\",\"url\":\"https://github.com/lararosekelley/navi/pull/132\"},{\"id\":\"#133\",\"state\":\"merged\",\"title\":\"refactor(destination): share headline/thread_key/escape across slack, discord, email\",\"url\":\"https://github.com/lararosekelley/navi/pull/133\"},{\"id\":\"#134\",\"state\":\"merged\",\"title\":\"refactor(cli): dedupe provider id lists + enabled/creds across config, providers, wiring, doctor\",\"url\":\"https://github.com/lararosekelley/navi/pull/134\"},{\"id\":\"#135\",\"state\":\"merged\",\"title\":\"refactor(forge): share is_settled/ts_key/excerpt with the gitlab source + tidy comments\",\"url\":\"https://github.com/lararosekelley/navi/pull/135\"},{\"id\":\"#136\",\"state\":\"merged\",\"title\":\"refactor(e2e): share mailpit helpers + Mailpit email wiring across the source slices\",\"url\":\"https://github.com/lararosekelley/navi/pull/136\"},{\"id\":\"#137\",\"state\":\"merged\",\"title\":\"fix(discord): retry transient delivery failures with backoff, like slack\",\"url\":\"https://github.com/lararosekelley/navi/pull/137\"}] -->\n- \ud83d\udfe3 ~~[fix(discord): retry transient delivery failures with backoff, like slack (#137)](https://github.com/lararosekelley/navi/pull/137)~~ (merged)\n- \ud83d\udfe3 ~~[refactor(e2e): share mailpit helpers + Mailpit email wiring across the source slices (#136)](https://github.com/lararosekelley/navi/pull/136)~~ (merged)\n- \ud83d\udfe3 ~~[refactor(forge): share is_settled/ts_key/excerpt with the gitlab source + tidy comments (#135)](https://github.com/lararosekelley/navi/pull/135)~~ (merged)\n- \ud83d\udfe3 ~~[refactor(cli): dedupe provider id lists + enabled/creds across config, providers, wiring, doctor (#134)](https://github.com/lararosekelley/navi/pull/134)~~ (merged)\n- \ud83d\udfe3 ~~[refactor(destination): share headline/thread_key/escape across slack, discord, email (#133)](https://github.com/lararosekelley/navi/pull/133)~~ (merged)\n- \ud83d\udfe3 ~~[refactor(core): share headline/thread_key/html_escape and add model tests (#132)](https://github.com/lararosekelley/navi/pull/132)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "d0bcafe0b239b7028cfeb9f63d2da21cb6485316",
+    "head_sha": "01f0d4fcbf149d74db67241a170391f5779d559a",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 2 summary comments during review"
+  }
+}

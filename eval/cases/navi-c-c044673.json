@@ -1,0 +1,35 @@
+{
+  "id": "navi-c-c044673",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(cli): add completions, setup, upgrade, downgrade, uninstall",
+    "body": "",
+    "base_sha": "b13334ec60037ee63405ac9632f5b52fb11142c9",
+    "head_sha": "b766245a6de5ff7c6d3619e36284517b65795f9d",
+    "commits": 1
+  },
+  "fix": {
+    "pr": null,
+    "sha": "c044673ae7591981996b8e538c93dae873d1fe2c"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/upgrade.rs",
+      "line": 22,
+      "window": 5,
+      "alt": [],
+      "description": "MIN_DOWNGRADE_VERSION is 0.1.4, a release without the downgrade command, so downgrading to the floor strands the user without downgrade.",
+      "severity": "low",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

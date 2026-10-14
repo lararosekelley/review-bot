@@ -1,0 +1,40 @@
+{
+  "id": "git-stk-146",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 67,
+    "title": "feat/58 stack description",
+    "body": "- **feat(cli): submit --desc to set useful pr/mr description**\n- **chore(code): break up some big files**\n\n<!-- git-stk:closes -->\nCloses #58\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#66\",\"state\":\"merged\",\"title\":\"feat(cli): give stack note editing to cleanup\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/66\"},{\"id\":\"#67\",\"state\":\"merged\",\"title\":\"feat/58 stack description\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/67\"},{\"id\":\"#68\",\"state\":\"merged\",\"title\":\"chore(cli): capture noisy git output\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/68\"},{\"id\":\"#69\",\"state\":\"merged\",\"title\":\"feat(cli): add more color\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/69\"},{\"id\":\"#70\",\"state\":\"merged\",\"title\":\"feat(cli): picker when needed\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/70\"},{\"id\":\"#71\",\"state\":\"merged\",\"title\":\"feat(cli): show hint when new version available\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/71\"},{\"id\":\"#72\",\"state\":\"merged\",\"title\":\"chore(docs): move to config over env vars\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/72\"}] -->\n- \ud83d\udfe3 ~~[chore(docs): move to config over env vars (#72)](https://github.com/lararosekelley/git-stk/pull/72)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): show hint when new version available (#71)](https://github.com/lararosekelley/git-stk/pull/71)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): picker when needed (#70)](https://github.com/lararosekelley/git-stk/pull/70)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): add more color (#69)](https://github.com/lararosekelley/git-stk/pull/69)~~ (merged)\n- \ud83d\udfe3 ~~[chore(cli): capture noisy git output (#68)](https://github.com/lararosekelley/git-stk/pull/68)~~ (merged)\n- \ud83d\udfe3 ~~[feat/58 stack description (#67)](https://github.com/lararosekelley/git-stk/pull/67)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[feat(cli): give stack note editing to cleanup (#66)](https://github.com/lararosekelley/git-stk/pull/66)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "84d600e55405d534f6848d3606ff9e41c3471c59",
+    "head_sha": "6c49b97a6acdb2880b55dc71e5ac1f9dc9db3bad",
+    "commits": 2
+  },
+  "fix": {
+    "pr": 146,
+    "sha": "3ba501418ed6fde4c1d9aec33445e47d5f0f11a4"
+  },
+  "expected": [
+    {
+      "path": "src/stack/mod.rs",
+      "line": 171,
+      "window": 5,
+      "alt": [
+        {
+          "path": "src/stack/restack.rs",
+          "line": 81
+        }
+      ],
+      "description": "collect_descendants recurses with no visited set, so cyclic stack metadata (which adopt does not prevent) recurses forever and overflows the stack.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

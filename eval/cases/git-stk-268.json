@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-268",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": 238,
+    "title": "feat(providers): append to pr template, not replace it",
+    "body": "<!-- git-stk:closes -->\nCloses #235\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#237\",\"state\":\"merged\",\"title\":\"fix(providers): don't post irrelevant stack siblings on PR/MR descriptions\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/237\"},{\"id\":\"#238\",\"state\":\"merged\",\"title\":\"feat(providers): append to pr template, not replace it\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/238\"}] -->\n- \ud83d\udfe3 ~~[feat(providers): append to pr template, not replace it (#238)](https://github.com/lararosekelley/git-stk/pull/238)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[fix(providers): don't post irrelevant stack siblings on PR/MR descriptions (#237)](https://github.com/lararosekelley/git-stk/pull/237)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "0410c59ae927af8eed8b11e98efab64c0738fa3e",
+    "head_sha": "9a887888ef7d5f4c448663b4384e30fb835fbf48",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 268,
+    "sha": "975c8c198ab150d2ae3d9b4b72bc9083f409ea96"
+  },
+  "expected": [
+    {
+      "path": "src/notes/mod.rs",
+      "line": 186,
+      "window": 5,
+      "alt": [],
+      "description": "body_with_template returns the body unchanged whenever it already contains the template text, so a commit body that quotes the template gets no seam and the --desc block runs into it.",
+      "severity": "low",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

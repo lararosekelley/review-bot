@@ -1,0 +1,23 @@
+{
+  "id": "navi-ctl-66",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 66,
+    "title": "feat(rules): multi-condition mute rules with per-field regex",
+    "body": "feat(rules): multi-condition mute rules with per-field regex\n\n<!-- git-stk:description -->\nLets one `[[rules.mute]]` rule combine conditions \u2014 all must match (AND) \u2014 so you can scope a mute instead of muting a whole author:\n\n```toml\n[[rules.mute]]\nauthor  = \"github-actions[bot]\"\nexcerpt = \"CircleCI pipeline triggered\"\n```\n\nFlat fields (`author`/`title`/`excerpt`, each with an optional `<field>_regex`) compose with the existing single `match`/`pattern` form (unchanged, still works). A rule with **no** conditions is a config error \u2014 otherwise \"all match\" is vacuously true and it would mute the whole feed.\n\nCloses #54.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #54\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#63\",\"state\":\"merged\",\"title\":\"feat(core): defer snapshot commit until after delivery\",\"url\":\"https://github.com/lararosekelley/navi/pull/63\"},{\"id\":\"#64\",\"state\":\"merged\",\"title\":\"test(gitlab): cover actor_is_viewer in the todo mapping\",\"url\":\"https://github.com/lararosekelley/navi/pull/64\"},{\"id\":\"#65\",\"state\":\"merged\",\"title\":\"feat(config): comment_min_age_secs to settle edited comments\",\"url\":\"https://github.com/lararosekelley/navi/pull/65\"},{\"id\":\"#66\",\"state\":\"merged\",\"title\":\"feat(rules): multi-condition mute rules with per-field regex\",\"url\":\"https://github.com/lararosekelley/navi/pull/66\"},{\"id\":\"#67\",\"state\":\"merged\",\"title\":\"feat(core): say \\\"their own PR\\\" when the author acts on their own PR\",\"url\":\"https://github.com/lararosekelley/navi/pull/67\"}] -->\n- \ud83d\udfe3 ~~[feat(core): say \"their own PR\" when the author acts on their own PR (#67)](https://github.com/lararosekelley/navi/pull/67)~~ (merged)\n- \ud83d\udfe3 ~~[feat(rules): multi-condition mute rules with per-field regex (#66)](https://github.com/lararosekelley/navi/pull/66)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[feat(config): comment_min_age_secs to settle edited comments (#65)](https://github.com/lararosekelley/navi/pull/65)~~ (merged)\n- \ud83d\udfe3 ~~[test(gitlab): cover actor_is_viewer in the todo mapping (#64)](https://github.com/lararosekelley/navi/pull/64)~~ (merged)\n- \ud83d\udfe3 ~~[feat(core): defer snapshot commit until after delivery (#63)](https://github.com/lararosekelley/navi/pull/63)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "cddfb1621350327c4db4705c24b61398e03c6473",
+    "head_sha": "b0d23df069ccb8553d4ff6a84ba40166e7d7ded6",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [
+      3623745138
+    ],
+    "note": "control; bot left 1 inline and 2 summary comments during review"
+  }
+}

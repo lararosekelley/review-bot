@@ -1,0 +1,956 @@
+[
+  {
+    "id": "git-stk-c-c1db749",
+    "intro": "c-7cc9a6b",
+    "fix": "c-c1db749",
+    "expected": [
+      {
+        "path": "src/providers.rs",
+        "line": 93,
+        "alt": [
+          {
+            "path": "src/providers.rs",
+            "line": 119
+          }
+        ],
+        "description": "review_for_branch only lists open pull/merge requests (gh pr list and glab mr list default to open), so cleanup never finds a review that has already merged.",
+        "severity": "high",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "direct push, predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-4",
+    "intro": "c-fd09c38",
+    "fix": 4,
+    "expected": [
+      {
+        "path": "src/completions.rs",
+        "blame": {
+          "line": 15,
+          "fix_commit": "3eeb869"
+        },
+        "description": "The bash git shim calls the clap completer with no positional arguments, but the completer reads the command, current word, and previous word from them, so `git stk <TAB>` completion does not work.",
+        "severity": "low",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "direct push, predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-9",
+    "intro": "c-0dfa614",
+    "fix": 9,
+    "expected": [
+      {
+        "path": "src/git.rs",
+        "blame": {
+          "line": 45,
+          "fix_commit": "914b27a"
+        },
+        "description": "delete_branch uses `git branch -d`, which refuses to delete a squash-merged branch whose commits are not ancestry-merged, so cleanup fails on landed branches.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "direct push, predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-c-b552fee",
+    "intro": "c-4be65ed",
+    "fix": "c-b552fee",
+    "expected": [
+      {
+        "path": "src/git.rs",
+        "blame": {
+          "line": 149,
+          "fix_commit": "b552fee"
+        },
+        "description": "supports_rebase_update_refs matches only the literal `--update-refs`, but newer git prints `--[no-]update-refs` in rebase help, so update-refs support is misdetected as missing.",
+        "severity": "medium",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "direct push, predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-101",
+    "intro": 94,
+    "fix": 101,
+    "expected": [
+      {
+        "path": "src/providers/github.rs",
+        "blame": {
+          "line": 82,
+          "fix_commit": "9dfa68f"
+        },
+        "description": "After the grace polls with no checks reported, wait_for_checks returns success even when branch protection is gating the merge on required checks that have not registered yet, so merge --wait merges early into a block.",
+        "severity": "medium",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-124",
+    "intro": 108,
+    "fix": 124,
+    "expected": [
+      {
+        "path": "src/git.rs",
+        "blame": {
+          "line": 180,
+          "fix_commit": "20d0ba6"
+        },
+        "description": "diff_against_head does not pin the a/ b/ prefixes, so a user with diff.noprefix or diff.mnemonicPrefix set produces headers that absorb's parser and `git apply` cannot read.",
+        "severity": "medium",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-125",
+    "intro": 113,
+    "fix": 125,
+    "expected": [
+      {
+        "path": "src/providers/mod.rs",
+        "blame": {
+          "line": 167,
+          "fix_commit": "97ce80e"
+        },
+        "description": "Provider detection checks whether the remote URL merely contains `github.com:` or `github.com/`, so look-alike hosts (mygithub.com, a path embedding github.com) are misdetected as GitHub or GitLab.",
+        "severity": "medium",
+        "visibility": "high"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-146",
+    "intro": 67,
+    "fix": 146,
+    "expected": [
+      {
+        "path": "src/stack/mod.rs",
+        "blame": {
+          "line": 347,
+          "fix_commit": "3ba5014"
+        },
+        "alt": [
+          {
+            "path": "src/stack/restack.rs",
+            "blame": {
+              "line": 145,
+              "fix_commit": "3ba5014"
+            }
+          }
+        ],
+        "description": "collect_descendants recurses with no visited set, so cyclic stack metadata (which adopt does not prevent) recurses forever and overflows the stack.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-147",
+    "intro": 130,
+    "fix": 147,
+    "expected": [
+      {
+        "path": "src/commands/submit.rs",
+        "blame": {
+          "line": 186,
+          "fix_commit": "f91f150"
+        },
+        "description": "A single-branch submit closes the superseded review and clears the rename marker even though the ledger prune that removes stale rows only runs for a stack-wide submit, orphaning the old row in every other overview.",
+        "severity": "medium",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-148",
+    "intro": 132,
+    "fix": 148,
+    "expected": [
+      {
+        "path": "src/lock.rs",
+        "blame": {
+          "line": 26,
+          "fix_commit": "f1c8d65"
+        },
+        "description": "The stack lock lives under the per-worktree git dir, so commands run from different worktrees of one repo take separate locks while mutating the shared branch config.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-155",
+    "intro": 125,
+    "fix": 155,
+    "expected": [
+      {
+        "path": "src/providers/mod.rs",
+        "blame": {
+          "line": 189,
+          "fix_commit": "6f8ad26"
+        },
+        "alt": [
+          {
+            "path": "src/providers/mod.rs",
+            "blame": {
+              "line": 176,
+              "fix_commit": "6f8ad26"
+            }
+          },
+          {
+            "path": "src/providers/mod.rs",
+            "blame": {
+              "line": 191,
+              "fix_commit": "6f8ad26"
+            }
+          }
+        ],
+        "description": "host_of strips userinfo at the first '@' anywhere in the URL rather than in the authority, mishandles IPv6 literals, and the configured stk.gitlabHost is compared raw, so a full-URL setting or an '@' in the userinfo or path misdetects the provider.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-174",
+    "intro": 94,
+    "fix": 174,
+    "expected": [
+      {
+        "path": "src/providers/github.rs",
+        "blame": {
+          "line": 178,
+          "fix_commit": "46d5f73"
+        },
+        "description": "interpret_checks classifies any non-zero gh exit that is not 'no checks' as failed checks, so a network, auth, or API error makes merge --all stop with a false 'checks failed'.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-175",
+    "intro": 94,
+    "fix": 175,
+    "expected": [
+      {
+        "path": "src/providers/github.rs",
+        "line": 72,
+        "alt": [
+          {
+            "path": "src/providers/gitlab.rs",
+            "line": 87
+          }
+        ],
+        "description": "The wait_for_checks poll loop has no overall timeout, so merge --wait hangs forever when checks stay pending.",
+        "severity": "medium",
+        "visibility": "high"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-185",
+    "intro": 132,
+    "fix": 185,
+    "expected": [
+      {
+        "path": "src/lock.rs",
+        "blame": {
+          "line": 43,
+          "fix_commit": "ca8537e"
+        },
+        "description": "A lock file left by a crashed or killed process is never reclaimed, so every later git stk command fails until the user removes it by hand.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-201",
+    "intro": 55,
+    "fix": 201,
+    "expected": [
+      {
+        "path": "dist-workspace.toml",
+        "blame": {
+          "line": 31,
+          "fix_commit": "c7aff69"
+        },
+        "description": "install-success-msg contains backticks, and the shell installer prints it as a shell literal, so `git stk setup` is command-substituted and actually run at install time.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-203",
+    "intro": 157,
+    "fix": 203,
+    "expected": [
+      {
+        "path": "src/stack/mod.rs",
+        "blame": {
+          "line": 375,
+          "fix_commit": "9ff1556"
+        },
+        "alt": [
+          {
+            "path": "src/stack/mod.rs",
+            "blame": {
+              "line": 384,
+              "fix_commit": "9ff1556"
+            }
+          }
+        ],
+        "description": "apply_remote_metadata passes branch and parent names read from untrusted remote metadata straight to git fetch/config, so a name like `--upload-pack=...` is parsed as a git option (argument injection).",
+        "severity": "high",
+        "visibility": "high"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-208",
+    "intro": 188,
+    "fix": 208,
+    "expected": [
+      {
+        "path": "src/setup.rs",
+        "blame": {
+          "line": 321,
+          "fix_commit": "445b2ab"
+        },
+        "description": "Uninstall always deletes the line after the completion marker, so if the user removed setup's completion line but left the marker, their own next rc line is deleted.",
+        "severity": "medium",
+        "visibility": "high"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-209",
+    "intro": "c-7cc9a6b",
+    "fix": 209,
+    "expected": [
+      {
+        "path": "src/providers/mod.rs",
+        "alt": [
+          {
+            "path": "src/providers/mod.rs",
+            "blame": {
+              "line": 97
+            }
+          }
+        ],
+        "description": "Error and status messages print the remote URL verbatim, leaking any token embedded in an HTTPS remote's userinfo.",
+        "severity": "medium",
+        "visibility": "low",
+        "blame": {
+          "line": 222
+        }
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "direct push, predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-216",
+    "intro": 20,
+    "fix": 216,
+    "expected": [
+      {
+        "path": "src/providers/gitlab.rs",
+        "blame": {
+          "line": 40,
+          "fix_commit": "ca2c401"
+        },
+        "description": "GitLab create_review passes --fill, which makes glab push the current checkout onto the source branch, clobbering a sibling branch when a stack is submitted from its leaf.",
+        "severity": "high",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-237",
+    "intro": 178,
+    "fix": 237,
+    "expected": [
+      {
+        "path": "src/stack/mod.rs",
+        "blame": {
+          "line": 317,
+          "fix_commit": "0410c59"
+        },
+        "description": "current_stack_branches anchors on stack_root, which is the trunk for a trunk-anchored stack, so it returns every sibling stack off the trunk and PR descriptions list unrelated branches.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-248",
+    "intro": 130,
+    "fix": 248,
+    "expected": [
+      {
+        "path": "src/commands/submit.rs",
+        "blame": {
+          "line": 274,
+          "fix_commit": "a526414"
+        },
+        "description": "The rename markers are cleared for every renamed branch even when the user declined to close the superseded review, so a later submit never re-offers the reconciliation.",
+        "severity": "low",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-263",
+    "intro": "c-75f412b",
+    "fix": 263,
+    "expected": [
+      {
+        "path": "src/stack/restack.rs",
+        "blame": {
+          "line": 178,
+          "fix_commit": "5da79e7"
+        },
+        "description": "valid_base trusts any recorded fork point that is still an ancestor of the branch, even a stale one older than the live merge base, so restack replays commits already upstream and repair reports a stale base as valid.",
+        "severity": "medium",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "direct push, predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-264",
+    "intro": 102,
+    "fix": 264,
+    "expected": [
+      {
+        "path": "src/commands/run.rs",
+        "blame": {
+          "line": 77,
+          "fix_commit": "5587e25"
+        },
+        "description": "run treats a command that fails to spawn (e.g. not found) as a failed run, reporting a bogus FAIL on every branch instead of the spawn error.",
+        "severity": "low",
+        "visibility": "high"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-268",
+    "intro": 238,
+    "fix": 268,
+    "expected": [
+      {
+        "path": "src/notes/mod.rs",
+        "blame": {
+          "line": 212,
+          "fix_commit": "975c8c1"
+        },
+        "description": "body_with_template returns the body unchanged whenever it already contains the template text, so a commit body that quotes the template gets no seam and the --desc block runs into it.",
+        "severity": "low",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "predates the bot"
+    }
+  },
+  {
+    "id": "git-stk-296",
+    "intro": 289,
+    "fix": 296,
+    "expected": [
+      {
+        "path": "src/git.rs",
+        "blame": {
+          "line": 231,
+          "fix_commit": "231a71a"
+        },
+        "description": "The worktree-collision message tells users to free a branch with `git worktree remove`, which deletes the other worktree and any work in it, when detaching it is enough.",
+        "severity": "low",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": "bot reviewed the message only for path quoting"
+    }
+  },
+  {
+    "id": "git-stk-297",
+    "intro": 293,
+    "fix": 297,
+    "expected": [
+      {
+        "path": "src/settings.rs",
+        "blame": {
+          "line": 153,
+          "fix_commit": "c9ccdc1"
+        },
+        "description": "The default worktree directory is derived from the current worktree's root instead of the main worktree, so `new --worktree` run inside a worktree nests the next one under it and repair looks for owned worktrees in the wrong place.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": "bot reviewed the PR without raising the anchor"
+    }
+  },
+  {
+    "id": "git-stk-310",
+    "intro": 309,
+    "fix": 310,
+    "expected": [
+      {
+        "path": "src/commands/merge.rs",
+        "blame": {
+          "line": 125,
+          "fix_commit": "ca31c6d"
+        },
+        "description": "merge --all pins the stack base as the first branch of the line, but sync still records the base's own review as its stack parent, so the base can be adopted, restacked onto the trunk, merged, or deleted as finished.",
+        "severity": "high",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "partial",
+      "comment_ids": [
+        3857591867
+      ],
+      "note": "bot traced sync re-recording the base's parent and landing it; the PR answered with the pinned_base workaround that 310 replaced"
+    }
+  },
+  {
+    "id": "git-stk-319",
+    "intro": 312,
+    "fix": 319,
+    "expected": [
+      {
+        "path": "src/providers/github.rs",
+        "blame": {
+          "line": 134,
+          "fix_commit": "10b3250"
+        },
+        "description": "Native stack detection returns None whenever stk.githubStacks is off, so stacks created outside git-stk go unnoticed and merge and retarget are attempted the ordinary way, which GitHub refuses.",
+        "severity": "medium",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": "bot asked for the setting to gate more paths, not fewer"
+    }
+  },
+  {
+    "id": "git-stk-326",
+    "intro": 312,
+    "fix": 326,
+    "expected": [
+      {
+        "path": "src/commands/merge.rs",
+        "line": 447,
+        "description": "checks_not_green_error still recommends `git stk merge --auto`, which this PR makes refuse any review in a GitHub native stack, so the hint answers one refusal with another.",
+        "severity": "low",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "caught",
+      "comment_ids": [
+        3875933946,
+        3874078374
+      ],
+      "note": "bot showed --auto on a stacked review printing the same hint"
+    }
+  },
+  {
+    "id": "git-stk-327",
+    "intro": 272,
+    "fix": 327,
+    "expected": [
+      {
+        "path": "src/stack/restack.rs",
+        "blame": {
+          "line": 418,
+          "fix_commit": "eba019e"
+        },
+        "description": "Remote-only commits are found by patch id alone, so after a parent is squash-merged and the branch rebased, the remote's old commits look missing locally and restack offers to cherry-pick work already present.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": "bot called the --cherry-pick detection correct"
+    }
+  },
+  {
+    "id": "git-stk-332",
+    "intro": 267,
+    "fix": 332,
+    "expected": [
+      {
+        "path": "src/providers/github.rs",
+        "blame": {
+          "line": 589,
+          "fix_commit": "12a1be4"
+        },
+        "alt": [
+          {
+            "path": "src/providers/github.rs",
+            "blame": {
+              "line": 616,
+              "fix_commit": "12a1be4"
+            }
+          }
+        ],
+        "description": "list's CI dot reads GitHub's statusCheckRollup aggregate, which counts every run on the head commit including cancelled and superseded ones, so a review whose rerun passed can still show failing.",
+        "severity": "low",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": ""
+    }
+  },
+  {
+    "id": "git-stk-334",
+    "intro": 312,
+    "fix": 334,
+    "expected": [
+      {
+        "path": "src/providers/github.rs",
+        "blame": {
+          "line": 776,
+          "fix_commit": "72814f9"
+        },
+        "description": "The async stacked merge always sends merge_method, which GitHub rejects when a merge queue governs the base branch, so merging a stacked review into a queued branch fails outright.",
+        "severity": "high",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": "bot judged the raw merge_method parameter safe"
+    }
+  },
+  {
+    "id": "git-stk-335",
+    "intro": 334,
+    "fix": 335,
+    "expected": [
+      {
+        "path": "src/providers/github.rs",
+        "blame": {
+          "line": 776,
+          "fix_commit": "484dad3"
+        },
+        "description": "The merge-method refusal is only caught in the PUT response, but GitHub can report it later as a failed status at a poll, so the retry without the method never happens and the merge still fails.",
+        "severity": "medium",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": "bot comments covered message wording"
+    }
+  },
+  {
+    "id": "git-stk-341",
+    "intro": 303,
+    "fix": 341,
+    "expected": [
+      {
+        "path": "src/commands/sync.rs",
+        "line": 264,
+        "alt": [
+          {
+            "path": "src/commands/sync.rs",
+            "line": 263
+          }
+        ],
+        "description": "sync keeps a landed branch whose ref cannot be deleted but still passes it to the following restack, which refuses a branch held by another worktree and fails the whole sync.",
+        "severity": "medium",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": ""
+    }
+  },
+  {
+    "id": "git-stk-346",
+    "intro": 303,
+    "fix": 346,
+    "expected": [
+      {
+        "path": "src/commands/cleanup.rs",
+        "blame": {
+          "line": 373,
+          "fix_commit": "0a78d9d"
+        },
+        "description": "The kept-branch message points at a later bare cleanup, which only walks the current line and so never reaches the kept branch.",
+        "severity": "low",
+        "visibility": "low"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": ""
+    }
+  },
+  {
+    "id": "git-stk-355",
+    "intro": 303,
+    "fix": 355,
+    "expected": [
+      {
+        "path": "src/commands/cleanup.rs",
+        "blame": {
+          "line": 387,
+          "fix_commit": "635a6b1"
+        },
+        "alt": [
+          {
+            "path": "src/commands/cleanup.rs",
+            "blame": {
+              "line": 350,
+              "fix_commit": "635a6b1"
+            }
+          }
+        ],
+        "description": "Cleanup removes an owned worktree only while it still holds the branch, so a worktree the user detached is left behind and its ownership marker is dropped with the branch, stranding it.",
+        "severity": "low",
+        "visibility": "medium"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": ""
+    }
+  },
+  {
+    "id": "git-stk-374",
+    "intro": 372,
+    "fix": 374,
+    "expected": [
+      {
+        "path": "src/tour/mod.rs",
+        "line": 573,
+        "alt": [
+          {
+            "path": "src/tour/mod.rs",
+            "line": 570
+          }
+        ],
+        "description": "The saved agent plan is keyed on the head sha but not the base, so a retargeted review with an unchanged head reuses a plan made for a different diff.",
+        "severity": "low",
+        "visibility": "high"
+      }
+    ],
+    "prior_bot": {
+      "status": "missed",
+      "comment_ids": [],
+      "note": "bot stated the cache key was complete"
+    }
+  },
+  {
+    "id": "git-stk-ctl-301",
+    "kind": "control",
+    "intro": 301,
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "control; bot left 0 inline and 1 summary comments during review"
+    }
+  },
+  {
+    "id": "git-stk-ctl-299",
+    "kind": "control",
+    "intro": 299,
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "control; bot left 0 inline and 1 summary comments during review"
+    }
+  },
+  {
+    "id": "git-stk-ctl-292",
+    "kind": "control",
+    "intro": 292,
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [
+        3696049896,
+        3696158449
+      ],
+      "note": "control; bot left 2 inline and 4 summary comments during review"
+    }
+  },
+  {
+    "id": "git-stk-ctl-291",
+    "kind": "control",
+    "intro": 291,
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [
+        3696048971
+      ],
+      "note": "control; bot left 1 inline and 2 summary comments during review"
+    }
+  },
+  {
+    "id": "git-stk-ctl-269",
+    "kind": "control",
+    "intro": 269,
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [
+        3597117871
+      ],
+      "note": "control; bot left 1 inline and 1 summary comments during review"
+    }
+  },
+  {
+    "id": "git-stk-ctl-266",
+    "kind": "control",
+    "intro": 266,
+    "prior_bot": {
+      "status": "n/a",
+      "comment_ids": [],
+      "note": "control; bot left 0 inline and 1 summary comments during review"
+    }
+  }
+]

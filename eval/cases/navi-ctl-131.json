@@ -1,0 +1,26 @@
+{
+  "id": "navi-ctl-131",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "dev",
+  "pr": {
+    "number": 131,
+    "title": "feat(cli): validate config in `navi doctor` (static checks + --offline)",
+    "body": "feat(cli): validate config in `navi doctor` (static checks + --offline)\n\n<!-- git-stk:closes -->\nCloses #116\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#128\",\"state\":\"merged\",\"title\":\"fix(core): name the PR author in merge-queue headlines, not \\\"their own PR\\\"\",\"url\":\"https://github.com/lararosekelley/navi/pull/128\"},{\"id\":\"#129\",\"state\":\"merged\",\"title\":\"feat(slack): only broadcast review actions on your own PRs\",\"url\":\"https://github.com/lararosekelley/navi/pull/129\"},{\"id\":\"#130\",\"state\":\"merged\",\"title\":\"feat(email): link \\\"navi\\\" in the footer to the project\",\"url\":\"https://github.com/lararosekelley/navi/pull/130\"},{\"id\":\"#131\",\"state\":\"merged\",\"title\":\"feat(cli): validate config in `navi doctor` (static checks + --offline)\",\"url\":\"https://github.com/lararosekelley/navi/pull/131\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): validate config in `navi doctor` (static checks + --offline) (#131)](https://github.com/lararosekelley/navi/pull/131)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[feat(email): link \"navi\" in the footer to the project (#130)](https://github.com/lararosekelley/navi/pull/130)~~ (merged)\n- \ud83d\udfe3 ~~[feat(slack): only broadcast review actions on your own PRs (#129)](https://github.com/lararosekelley/navi/pull/129)~~ (merged)\n- \ud83d\udfe3 ~~[fix(core): name the PR author in merge-queue headlines, not \"their own PR\" (#128)](https://github.com/lararosekelley/navi/pull/128)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "bd333dcc7b72d0e1dd3868631c4da77e8246dc19",
+    "head_sha": "c206ed28cc1cbe3111801ac564bbed6af03bf266",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [
+      3652755261,
+      3652755338,
+      3652757854,
+      3652757957
+    ],
+    "note": "control; bot left 4 inline and 3 summary comments during review"
+  }
+}

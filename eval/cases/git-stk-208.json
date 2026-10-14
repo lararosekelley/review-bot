@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-208",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 188,
+    "title": "feat(cli): add uninstall docs/command",
+    "body": "<!-- git-stk:closes -->\nCloses #181\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#186\",\"state\":\"merged\",\"title\":\"chore(code): polish things\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/186\"},{\"id\":\"#187\",\"state\":\"merged\",\"title\":\"feat(cli): stk list shows +/- changed lines\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/187\"},{\"id\":\"#188\",\"state\":\"merged\",\"title\":\"feat(cli): add uninstall docs/command\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/188\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): add uninstall docs/command (#188)](https://github.com/lararosekelley/git-stk/pull/188)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[feat(cli): stk list shows +/- changed lines (#187)](https://github.com/lararosekelley/git-stk/pull/187)~~ (merged)\n- \ud83d\udfe3 ~~[chore(code): polish things (#186)](https://github.com/lararosekelley/git-stk/pull/186)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "215921af1dc68360dc4ae6c41ed2378d35e566d8",
+    "head_sha": "446248ae376cb9edbf54141b2890b28d73c04934",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 208,
+    "sha": "445b2ab32521340416a82ffede5291307ea3d667"
+  },
+  "expected": [
+    {
+      "path": "src/setup.rs",
+      "line": 303,
+      "window": 5,
+      "alt": [],
+      "description": "Uninstall always deletes the line after the completion marker, so if the user removed setup's completion line but left the marker, their own next rc line is deleted.",
+      "severity": "medium",
+      "visibility": "high",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

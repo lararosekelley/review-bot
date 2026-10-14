@@ -1,0 +1,37 @@
+{
+  "id": "navi-75",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": 60,
+    "title": "fix(cli): skip navi upgrade re-download when already on the latest",
+    "body": "<!-- git-stk:description -->\n`navi upgrade` re-downloaded and reinstalled the latest release on every run, so re-running kept re-fetching it. `upgrade()` had no installed-vs-latest check and ignored its `--force` param (`_force`).\n\nNow it compares the installed version against the latest remote release (the same `remote_release_versions()` source `downgrade`/`maybe_hint_update` use) and no-ops when already current:\n\n```\nnavi 0.1.9 is already the latest release; nothing to upgrade (use --force to reinstall)\n```\n\n`--force` (already documented, now wired up) bypasses the check. The check is best-effort: a network/parse failure falls through and installs as before, so a transient outage can't block an upgrade. Decision logic is a pure `upgrade_needed()` helper with unit tests (current, behind, ahead, forced, unknown-latest).\n\nForward-looking like all self-upgrade fixes: the first upgrade *onto* a build containing this still re-downloads; subsequent runs then no-op.\n\nCloses #59.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #59\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#60\",\"state\":\"merged\",\"title\":\"fix(cli): skip navi upgrade re-download when already on the latest\",\"url\":\"https://github.com/lararosekelley/navi/pull/60\"}] -->\n- \ud83d\udfe3 ~~[fix(cli): skip navi upgrade re-download when already on the latest (#60)](https://github.com/lararosekelley/navi/pull/60)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "6d50b1bc42281fe97463af1d44054d7bc6cdbd1b",
+    "head_sha": "9f1b24cd1097f837a1538e9341e58bac37f130d3",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 75,
+    "sha": "9de99ebc8bf969b599925d192a06fcc3976ec43a"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/upgrade.rs",
+      "line": 53,
+      "window": 5,
+      "alt": [],
+      "description": "The already-latest check compares against git tags, which exist before the release is published, so upgrade reinstalls the current version in a loop.",
+      "severity": "low",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "missed",
+    "comment_ids": [
+      5026733506
+    ],
+    "note": "summary review discussed version parsing, not tags vs published releases"
+  }
+}

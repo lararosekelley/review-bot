@@ -1,0 +1,37 @@
+{
+  "id": "navi-171",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": 95,
+    "title": "feat(gitea): sweep involved PRs to catch self-merges and own-PR activity",
+    "body": "Closes #92. Gitea involved-PR sweep.\n\nThe Gitea source was notifications-only, so it had the same gaps GitHub (#86, #38) and GitLab already handle: a merge/close you do yourself (Gitea doesn't notify you) and activity on your own PRs were invisible.\n\n### Change\nAdds `gitea.track_prs` (default true, matching GitHub) and an involved-PR sweep via `/repos/issues/search` (`created`/`assigned`/`mentioned`/`review_requested` scope the results to you). Mirrors the GitHub architecture: an open sweep plus a recently-closed sweep (`state=closed&since=<cursor>`, skipped on the first poll so it baselines forward), a shared `process_pr` + `diff_swept_prs`, and deferred snapshots for exactly-once. The per-poll INFO summary now includes `open_prs`/`closed_prs`.\n\n### Tests\n`self_merged_pr_caught_by_the_closed_sweep`: open search empty, closed search returns the merged PR (matched by the `state` query param), navi fires `Merged`. Existing notification test unaffected (`track_prs: false`).\n\nNote: the `/repos/issues/search` params follow Gitea's documented issue-search API; validated here against the mock and by the hermetic Gitea e2e slice.\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#88\",\"state\":\"merged\",\"title\":\"fix(github): catch self-merges/closes via a recently-closed PR sweep\",\"url\":\"https://github.com/lararosekelley/navi/pull/88\"},{\"id\":\"#89\",\"state\":\"merged\",\"title\":\"feat(github): log a per-poll summary of what each poll examined\",\"url\":\"https://github.com/lararosekelley/navi/pull/89\"},{\"id\":\"#94\",\"state\":\"merged\",\"title\":\"fix(gitlab): honor general.comment_min_age_secs when diffing MR notes\",\"url\":\"https://github.com/lararosekelley/navi/pull/94\"},{\"id\":\"#95\",\"state\":\"merged\",\"title\":\"feat(gitea): sweep involved PRs to catch self-merges and own-PR activity\",\"url\":\"https://github.com/lararosekelley/navi/pull/95\"},{\"id\":\"#96\",\"state\":\"merged\",\"title\":\"feat(source): honor general.backfill on gitlab and gitea too\",\"url\":\"https://github.com/lararosekelley/navi/pull/96\"},{\"id\":\"#97\",\"state\":\"merged\",\"title\":\"feat(discord): group a PR's events into a reply chain in bot mode\",\"url\":\"https://github.com/lararosekelley/navi/pull/97\"}] -->\n- \ud83d\udfe3 ~~[feat(discord): group a PR's events into a reply chain in bot mode (#97)](https://github.com/lararosekelley/navi/pull/97)~~ (merged)\n- \ud83d\udfe3 ~~[feat(source): honor general.backfill on gitlab and gitea too (#96)](https://github.com/lararosekelley/navi/pull/96)~~ (merged)\n- \ud83d\udfe3 ~~[feat(gitea): sweep involved PRs to catch self-merges and own-PR activity (#95)](https://github.com/lararosekelley/navi/pull/95)~~ (merged) \ud83d\udc48\n- \ud83d\udfe3 ~~[fix(gitlab): honor general.comment_min_age_secs when diffing MR notes (#94)](https://github.com/lararosekelley/navi/pull/94)~~ (merged)\n- \ud83d\udfe3 ~~[feat(github): log a per-poll summary of what each poll examined (#89)](https://github.com/lararosekelley/navi/pull/89)~~ (merged)\n- \ud83d\udfe3 ~~[fix(github): catch self-merges/closes via a recently-closed PR sweep (#88)](https://github.com/lararosekelley/navi/pull/88)~~ (merged)\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "15448af49a5baa05bdf896ecde54fb068af45259",
+    "head_sha": "5b80e1c751b728b116ce6794b9a9274642966498",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 171,
+    "sha": "186d2a052f1a80d8b84dfadedfb79f606d80e23b"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-gitea/src/source.rs",
+      "line": 261,
+      "window": 5,
+      "alt": [],
+      "description": "Gitea ANDs the created/assigned/mentioned/review_requested search flags, so the involved-PR sweep matches almost nothing.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "missed",
+    "comment_ids": [
+      3631213871
+    ],
+    "note": "bot commented on repo_url only"
+  }
+}

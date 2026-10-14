@@ -1,0 +1,37 @@
+{
+  "id": "git-stk-310",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": 309,
+    "title": "fix(stack): submit/merge now understand non-trunk stack parents better",
+    "body": "<!-- git-stk:description -->\nA stack rooted on a branch other than the trunk - a release line, say - keeps that parentless root in its line. That root is the base the branch above it targets, not a layer of the stack: `restack` and `absorb` already skip it, but `submit` demanded a parent for every branch in scope, and `merge` treated it as the stack bottom.\n\n`stack::stacked_layers` states the rule once, and `submit` and `merge` now follow it.\n\n- **submit:** stack mode ships what `--no-stack` always did, and leaves the base out of the `-u --force-with-lease` push and the review-body steps. It was refusing a shape `new` and `adopt` both create.\n- **merge:** never lands the base review. A release branch with an open PR into the trunk became the stack bottom, and the base check that would have caught it is skipped for a branch with no recorded parent. `merge --all` counted it among the reviews to land, too.\n- **errors:** \"no stack parent\" now names the branch being acted on and points at `git stk adopt --parent <base>` rather than a bare `git stk adopt`, which silently adopts onto the trunk - destructive when the branch is a release line.\n\n`sync` reaches the same bad metadata from another direction; filed as #308, where the narrow fixes conflict with its metadata-rebuild job.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #307\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#309\",\"state\":\"merged\",\"title\":\"fix(stack): submit/merge now understand non-trunk stack parents better\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/309\"},{\"id\":\"#310\",\"state\":\"merged\",\"title\":\"fix(sync): sync adopts proper base branch\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/310\"},{\"id\":\"#312\",\"state\":\"merged\",\"title\":\"feat(github): read GitHub's native stacks behind stk.githubStacks\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/312\"},{\"id\":\"#319\",\"state\":\"merged\",\"title\":\"fix(github): a lone review is not a stack to register\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/319\"},{\"id\":\"#320\",\"state\":\"merged\",\"title\":\"test(merge): cover merge --all and every async status for a stacked review\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/320\"},{\"id\":\"#321\",\"state\":\"merged\",\"title\":\"feat(unstack): dissolve the platform's own stack\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/321\"},{\"id\":\"#322\",\"state\":\"merged\",\"title\":\"fix(stack): name the branch and parent in every adopt suggestion\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/322\"},{\"id\":\"#323\",\"state\":\"merged\",\"title\":\"feat(list): show a review's place in the platform's own stack\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/323\"},{\"id\":\"#324\",\"state\":\"merged\",\"title\":\"test(tests): cover GitHub's native stacks in the live e2e suite\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/324\"},{\"id\":\"#325\",\"state\":\"merged\",\"title\":\"feat(guide): add a github tour for stacked pull requests\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/325\"},{\"id\":\"#326\",\"state\":\"merged\",\"title\":\"fix(github): close the review follow-ups across the stack\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/326\"}] -->\n- \ud83d\udfe3 ~~[fix(github): close the review follow-ups across the stack (#326)](https://github.com/lararosekelley/git-stk/pull/326)~~ (merged)\n- \ud83d\udfe3 ~~[feat(guide): add a github tour for stacked pull requests (#325)](https://github.com/lararosekelley/git-stk/pull/325)~~ (merged)\n- \ud83d\udfe3 ~~[test(tests): cover GitHub's native stacks in the live e2e suite (#324)](https://github.com/lararosekelley/git-stk/pull/324)~~ (merged)\n- \ud83d\udfe3 ~~[feat(list): show a review's place in the platform's own stack (#323)](https://github.com/lararosekelley/git-stk/pull/323)~~ (merged)\n- \ud83d\udfe3 ~~[fix(stack): name the branch and parent in every adopt suggestion (#322)](https://github.com/lararosekelley/git-stk/pull/322)~~ (merged)\n- \ud83d\udfe3 ~~[feat(unstack): dissolve the platform's own stack (#321)](https://github.com/lararosekelley/git-stk/pull/321)~~ (merged)\n- \ud83d\udfe3 ~~[test(merge): cover merge --all and every async status for a stacked review (#320)](https://github.com/lararosekelley/git-stk/pull/320)~~ (merged)\n- \ud83d\udfe3 ~~[fix(github): a lone review is not a stack to register (#319)](https://github.com/lararosekelley/git-stk/pull/319)~~ (merged)\n- \ud83d\udfe3 ~~[feat(github): read GitHub's native stacks behind stk.githubStacks (#312)](https://github.com/lararosekelley/git-stk/pull/312)~~ (merged)\n- \ud83d\udfe3 ~~[fix(sync): sync adopts proper base branch (#310)](https://github.com/lararosekelley/git-stk/pull/310)~~ (merged)\n- \ud83d\udfe3 ~~[fix(stack): submit/merge now understand non-trunk stack parents better (#309)](https://github.com/lararosekelley/git-stk/pull/309)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "45b859f4b7c707c5d277547ce4bc201df5725a1d",
+    "head_sha": "37f71d586f0c120554d94a7238e4bf269b5dc29a",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 310,
+    "sha": "ca31c6db9138a7444ea96b4a46d40e3bab4d97cf"
+  },
+  "expected": [
+    {
+      "path": "src/commands/merge.rs",
+      "line": 125,
+      "window": 5,
+      "alt": [],
+      "description": "merge --all pins the stack base as the first branch of the line, but sync still records the base's own review as its stack parent, so the base can be adopted, restacked onto the trunk, merged, or deleted as finished.",
+      "severity": "high",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "partial",
+    "comment_ids": [
+      3857591867
+    ],
+    "note": "bot traced sync re-recording the base's parent and landing it; the PR answered with the pinned_base workaround that 310 replaced"
+  }
+}

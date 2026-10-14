@@ -1,0 +1,35 @@
+{
+  "id": "navi-c-3e07cb1",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "chore(release): add cargo-dist release config",
+    "body": "",
+    "base_sha": "873e82769b0daba989c42f8d22f8d15c61d1537a",
+    "head_sha": "9518b42bf78f35d7597c1b99ebe1f1d11c5b47a4",
+    "commits": 1
+  },
+  "fix": {
+    "pr": null,
+    "sha": "3e07cb1ecc4295307ba5a90f90ce23a428a92e4e"
+  },
+  "expected": [
+    {
+      "path": "dist-workspace.toml",
+      "line": 42,
+      "window": 5,
+      "alt": [],
+      "description": "Backticks in install-success-msg are command-substituted by the installer's shell, running navi commands at install time.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

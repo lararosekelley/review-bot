@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-327",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": 272,
+    "title": "fix(restack): reconcile remote-only commits before force-pushing",
+    "body": "fix(restack): reconcile remote-only commits before force-pushing\n\n<!-- git-stk:description -->\nWhen a stack branch's remote tip has commits the local branch lacks (e.g. a commit made directly on GitHub), `sync`/`restack` now refresh the branches' tracking refs and offer to cherry-pick those commits in before force-pushing. Previously the push was rejected and git-stk looped on \"the remote has moved on \u2014 run sync\" with no way to reconcile.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #270\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#272\",\"state\":\"merged\",\"title\":\"fix(restack): reconcile remote-only commits before force-pushing\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/272\"},{\"id\":\"#273\",\"state\":\"merged\",\"title\":\"fix(submit): refresh a stale overview row that has since merged\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/273\"}] -->\n- \ud83d\udfe3 ~~[fix(submit): refresh a stale overview row that has since merged (#273)](https://github.com/lararosekelley/git-stk/pull/273)~~ (merged)\n- \ud83d\udfe3 ~~[fix(restack): reconcile remote-only commits before force-pushing (#272)](https://github.com/lararosekelley/git-stk/pull/272)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "2abd530a34df0805875059ade82a4e009eb67e85",
+    "head_sha": "d56b4cb8cf0431d9225332e774bf5149a8e266c8",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 327,
+    "sha": "00a44f7cb90448087fc2f7de9aab3adf612f776a"
+  },
+  "expected": [
+    {
+      "path": "src/stack/restack.rs",
+      "line": 310,
+      "window": 5,
+      "alt": [],
+      "description": "Remote-only commits are found by patch id alone, so after a parent is squash-merged and the branch rebased, the remote's old commits look missing locally and restack offers to cherry-pick work already present.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "missed",
+    "comment_ids": [],
+    "note": "bot called the --cherry-pick detection correct"
+  }
+}

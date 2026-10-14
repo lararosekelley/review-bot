@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-c-b552fee",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": null,
+    "title": "feat(stack): add git command helpers",
+    "body": "",
+    "base_sha": "65c941a7cce94ecdc0d7e8841b9f7ce61f1b8000",
+    "head_sha": "4be65ed51c8b6eba2ec156b7387992070b844022",
+    "commits": 1
+  },
+  "fix": {
+    "pr": null,
+    "sha": "b552fee9b8676a4b9f106d10e0f215483c2687e3"
+  },
+  "expected": [
+    {
+      "path": "src/git.rs",
+      "line": 67,
+      "window": 5,
+      "alt": [],
+      "description": "supports_rebase_update_refs matches only the literal `--update-refs`, but newer git prints `--[no-]update-refs` in rebase help, so update-refs support is misdetected as missing.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push, predates the bot"
+  }
+}

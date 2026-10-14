@@ -1,0 +1,40 @@
+{
+  "id": "git-stk-332",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 267,
+    "title": "feat(list): add --reviews and --local flags for rich review info",
+    "body": "feat(list): add --reviews and --local flags for rich review info\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#267\",\"state\":\"merged\",\"title\":\"feat(list): add --reviews and --local flags for rich review info\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/267\"}] -->\n- \ud83d\udfe3 ~~[feat(list): add --reviews and --local flags for rich review info (#267)](https://github.com/lararosekelley/git-stk/pull/267)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "dfc2dc7bcf1964444199410d5465feed1e946ca9",
+    "head_sha": "d1ccaddbf441e7b46903d0d6e7488a229404cd43",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 332,
+    "sha": "43bfec1bc863761ea5d91b9523cbd6b4702a8fbf"
+  },
+  "expected": [
+    {
+      "path": "src/providers/github.rs",
+      "line": 312,
+      "window": 5,
+      "alt": [
+        {
+          "path": "src/providers/github.rs",
+          "line": 339
+        }
+      ],
+      "description": "list's CI dot reads GitHub's statusCheckRollup aggregate, which counts every run on the head commit including cancelled and superseded ones, so a review whose rerun passed can still show failing.",
+      "severity": "low",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "missed",
+    "comment_ids": [],
+    "note": ""
+  }
+}

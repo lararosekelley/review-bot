@@ -1,0 +1,35 @@
+{
+  "id": "git-stk-124",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": 108,
+    "title": "feat(cli): start on absorb command",
+    "body": "<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#108\",\"state\":\"merged\",\"title\":\"feat(cli): start on absorb command\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/108\"},{\"id\":\"#109\",\"state\":\"merged\",\"title\":\"feat(cli): finish absorb command\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/109\"},{\"id\":\"#111\",\"state\":\"merged\",\"title\":\"feat(cli): add absorb guide to tutorial\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/111\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): add absorb guide to tutorial (#111)](https://github.com/lararosekelley/git-stk/pull/111)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): finish absorb command (#109)](https://github.com/lararosekelley/git-stk/pull/109)~~ (merged)\n- \ud83d\udfe3 ~~[feat(cli): start on absorb command (#108)](https://github.com/lararosekelley/git-stk/pull/108)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "458334bf3c59c359adba6b0d9f4097ffd242bf43",
+    "head_sha": "9f132e1127636f9d3dfd6822bce101ec864188c8",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 124,
+    "sha": "20d0ba661844cb187e9bfa753713bd7d293e62ae"
+  },
+  "expected": [
+    {
+      "path": "src/git.rs",
+      "line": 180,
+      "window": 5,
+      "alt": [],
+      "description": "diff_against_head does not pin the a/ b/ prefixes, so a user with diff.noprefix or diff.mnemonicPrefix set produces headers that absorb's parser and `git apply` cannot read.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "predates the bot"
+  }
+}

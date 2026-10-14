@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-113",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 113,
+    "title": "feat(engine): fallback route for events no other route claims",
+    "body": "feat(engine): fallback route for events no other route claims\n\n<!-- git-stk:closes -->\nCloses #111\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#113\",\"state\":\"merged\",\"title\":\"feat(engine): fallback route for events no other route claims\",\"url\":\"https://github.com/lararosekelley/navi/pull/113\"},{\"id\":\"#114\",\"state\":\"merged\",\"title\":\"feat(cli): add `navi service restart`\",\"url\":\"https://github.com/lararosekelley/navi/pull/114\"}] -->\n- \ud83d\udfe3 ~~[feat(cli): add `navi service restart` (#114)](https://github.com/lararosekelley/navi/pull/114)~~ (merged)\n- \ud83d\udfe3 ~~[feat(engine): fallback route for events no other route claims (#113)](https://github.com/lararosekelley/navi/pull/113)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "9ee5b96f659ddf7f3cac20ef1b099504598beb1f",
+    "head_sha": "8d128289249e4a012173a3f46c9f17efa80e5696",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 3 summary comments during review"
+  }
+}

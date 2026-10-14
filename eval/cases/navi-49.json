@@ -1,0 +1,35 @@
+{
+  "id": "navi-49",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(cli): add `navi service` to manage the background service",
+    "body": "",
+    "base_sha": "a49a7e10141ababcc5e928c71057d66f60abe65e",
+    "head_sha": "a1a570cf8dedcaaa3b984e539c8f4ffbacf4b92f",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 49,
+    "sha": "3af1fdceb5fdce634ae38c2947b8dd8602b941fc"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/service.rs",
+      "line": 348,
+      "window": 5,
+      "alt": [],
+      "description": "Exe and config paths are interpolated into a single-quoted PowerShell string without escaping, so a path with an apostrophe breaks out of the quoting.",
+      "severity": "medium",
+      "visibility": "high",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

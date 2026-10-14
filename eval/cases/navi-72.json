@@ -1,0 +1,40 @@
+{
+  "id": "navi-72",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "dev",
+  "pr": {
+    "number": null,
+    "title": "feat(cli): add completions, setup, upgrade, downgrade, uninstall",
+    "body": "",
+    "base_sha": "b13334ec60037ee63405ac9632f5b52fb11142c9",
+    "head_sha": "b766245a6de5ff7c6d3619e36284517b65795f9d",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 72,
+    "sha": "ad0a7f6de7ecab5bd82f7a1d81ec8ede9ec8d043"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/upgrade.rs",
+      "line": 127,
+      "window": 5,
+      "alt": [
+        {
+          "path": "crates/navi-notifier/src/upgrade.rs",
+          "line": 119
+        }
+      ],
+      "description": "Installer runs as curl | sh (and irm | iex) without failing on download errors, so a failed or rate-limited download exits 0 and reports a successful upgrade.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push to main"
+  }
+}

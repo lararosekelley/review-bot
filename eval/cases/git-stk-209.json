@@ -1,0 +1,40 @@
+{
+  "id": "git-stk-209",
+  "repo": "lararosekelley/git-stk",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": null,
+    "title": "feat(providers): add review workflows",
+    "body": "",
+    "base_sha": "a55a6018d2d2c7fa1ed983ade59ccf0f407eee5c",
+    "head_sha": "7cc9a6b7bd0433267faf43db8577ef9617b5c3f4",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 209,
+    "sha": "fcf32f069f4b79aa4718179e1d5cb64279b9d742"
+  },
+  "expected": [
+    {
+      "path": "src/providers.rs",
+      "line": 517,
+      "window": 5,
+      "alt": [
+        {
+          "path": "src/providers.rs",
+          "line": 53
+        }
+      ],
+      "description": "Error and status messages print the remote URL verbatim, leaking any token embedded in an HTTPS remote's userinfo.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "direct push, predates the bot"
+  }
+}

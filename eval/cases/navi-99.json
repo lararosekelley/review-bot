@@ -1,0 +1,38 @@
+{
+  "id": "navi-99",
+  "repo": "lararosekelley/navi",
+  "kind": "historical",
+  "split": "holdout",
+  "pr": {
+    "number": 88,
+    "title": "fix(github): catch self-merges/closes via a recently-closed PR sweep",
+    "body": "Closes #86. Catch self-merges/closes of your own PRs.\n\nnavi missed merges/closes you perform yourself: GitHub never notifies you about your own actions, and the involved-PR sweep was `is:open`, so a PR that already merged had left the search and its transition was never seen. (Diagnosed by dogfooding the 0.2.3 stack merge: only #85 alerted, and only by a race \u2014 it merged ~5s before a sweep while GitHub's search index still listed it open.)\n\n### Fix\nAdd a second involved-PR sweep for recently-**closed** PRs, generalizing the `state=all` + `updated_after` approach already used by the GitLab source (#17):\n\n- `recently_closed_prs`: `is:closed is:pr involves:me updated:>=<cursor>`, bounded by a new `pr_closed_since` cursor (advanced each poll with the standard overlap) so it doesn't rescan history. Second-precision timestamp \u2014 GitHub search's `updated:` qualifier rejects subseconds.\n- Skipped on the very first poll (no cursor yet) so it baselines forward instead of replaying every old closed PR.\n- Both sweeps now share a `diff_swept_prs` helper (search loop extracted to `search_prs`), so there's no duplicated per-PR logic. A closed PR surfaces once on its merge/close bump, diffs against the stored open snapshot, and fires `Merged`/`Closed`. Covers the self-close miss (#21) too.\n\n### Tests\n`self_merged_pr_is_caught_by_the_closed_sweep`: open search returns empty (PR already merged), closed search returns the merged PR, and navi fires exactly one `Merged`. Existing involved-PR tests unaffected (closed sweep is skipped without the cursor, i.e. on a first poll).\n\n<!-- git-stk:closes -->\nCloses #86\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#88\",\"state\":\"merged\",\"title\":\"fix(github): catch self-merges/closes via a recently-closed PR sweep\",\"url\":\"https://github.com/lararosekelley/navi/pull/88\"},{\"id\":\"#89\",\"state\":\"merged\",\"title\":\"feat(github): log a per-poll summary of what each poll examined\",\"url\":\"https://github.com/lararosekelley/navi/pull/89\"},{\"id\":\"#94\",\"state\":\"merged\",\"title\":\"fix(gitlab): honor general.comment_min_age_secs when diffing MR notes\",\"url\":\"https://github.com/lararosekelley/navi/pull/94\"},{\"id\":\"#95\",\"state\":\"merged\",\"title\":\"feat(gitea): sweep involved PRs to catch self-merges and own-PR activity\",\"url\":\"https://github.com/lararosekelley/navi/pull/95\"},{\"id\":\"#96\",\"state\":\"merged\",\"title\":\"feat(source): honor general.backfill on gitlab and gitea too\",\"url\":\"https://github.com/lararosekelley/navi/pull/96\"},{\"id\":\"#97\",\"state\":\"merged\",\"title\":\"feat(discord): group a PR's events into a reply chain in bot mode\",\"url\":\"https://github.com/lararosekelley/navi/pull/97\"}] -->\n- \ud83d\udfe3 ~~[feat(discord): group a PR's events into a reply chain in bot mode (#97)](https://github.com/lararosekelley/navi/pull/97)~~ (merged)\n- \ud83d\udfe3 ~~[feat(source): honor general.backfill on gitlab and gitea too (#96)](https://github.com/lararosekelley/navi/pull/96)~~ (merged)\n- \ud83d\udfe3 ~~[feat(gitea): sweep involved PRs to catch self-merges and own-PR activity (#95)](https://github.com/lararosekelley/navi/pull/95)~~ (merged)\n- \ud83d\udfe3 ~~[fix(gitlab): honor general.comment_min_age_secs when diffing MR notes (#94)](https://github.com/lararosekelley/navi/pull/94)~~ (merged)\n- \ud83d\udfe3 ~~[feat(github): log a per-poll summary of what each poll examined (#89)](https://github.com/lararosekelley/navi/pull/89)~~ (merged)\n- \ud83d\udfe3 ~~[fix(github): catch self-merges/closes via a recently-closed PR sweep (#88)](https://github.com/lararosekelley/navi/pull/88)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "base_sha": "e0200d532ae17572f5e850e9f6cfff1d9d1fd8bb",
+    "head_sha": "5c26271ab8c2f0987e7e78be2451be612efad791",
+    "commits": 1
+  },
+  "fix": {
+    "pr": 99,
+    "sha": "4629ebe48bb7f6ff99df8226f1f78df45d89cedd"
+  },
+  "expected": [
+    {
+      "path": "crates/navi-notifier-github/src/source.rs",
+      "line": 398,
+      "window": 5,
+      "alt": [],
+      "description": "The involved-sweep pr: cursor is written before delivery, so a failed send on a closed PR (frozen updated_at) drops the event permanently.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "blame"
+    }
+  ],
+  "prior_bot": {
+    "status": "caught",
+    "comment_ids": [
+      3630844918,
+      5046901426
+    ],
+    "note": "flagged eager pr: cursor write for the closed sweep as non-blocking follow-up"
+  }
+}
