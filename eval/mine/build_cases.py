@@ -9,11 +9,24 @@ line at the introducing head ("line": N, location_source "manual").
 import difflib
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gitutil as g  # noqa: E402
+
+
+STACK_NOTE = re.compile(r"\n*<!-- git-stk:stack -->.*?<!-- /git-stk:stack -->\n*", re.S)
+
+
+def pr_body(text):
+    """The PR description without git-stk's stack note.
+
+    The note is rewritten after merge and lists later PRs, including the ones
+    that fixed this PR's bugs, so a replay must not see it.
+    """
+    return STACK_NOTE.sub("\n", text or "").strip()
 
 
 def split_of(slug, head_sha):
@@ -103,7 +116,7 @@ def build(repo, slug, entry):
         "pr": {
             "number": pr["number"] if pr else None,
             "title": pr["title"] if pr else unit["subjects"][0],
-            "body": pr["body"] if pr else g.git(repo.path, "show", "-s", "--format=%b", head).strip(),
+            "body": pr_body(pr["body"]) if pr else g.git(repo.path, "show", "-s", "--format=%b", head).strip(),
             "base_sha": base,
             "head_sha": head,
             "commits": pr["commits"] if pr else 1,

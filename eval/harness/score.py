@@ -233,7 +233,7 @@ def main():
     p.add_argument("--judge-model", default="claude-opus-5-5")
     p.add_argument("--jobs", type=int, default=4)
     p.add_argument("--src-root", type=Path, default=Path.home() / "Code/personal")
-    p.add_argument("--work-root", type=Path, default=replay.EVAL / "work")
+    p.add_argument("--work-root", type=Path, default=replay.WORK_ROOT)
     args = p.parse_args()
     if "ANTHROPIC_API_KEY" not in os.environ:
         sys.exit("ANTHROPIC_API_KEY is required for the judge.")

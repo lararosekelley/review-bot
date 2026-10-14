@@ -6,7 +6,7 @@
   "pr": {
     "number": 20,
     "title": "refactor(providers): split into folder",
-    "body": "<!-- git-stk:stack -->\n- [feat(cli): update sync to handle merge-restack loop in a one-shot (#28)](https://github.com/lararosekelley/git-stk/pull/28)\n- [feat(cli): submitStack config to make bare submit cover stack (#27)](https://github.com/lararosekelley/git-stk/pull/27)\n- [feat(stack): submit/restack from anywhere along the stack (#26)](https://github.com/lararosekelley/git-stk/pull/26)\n- [feat(docs): add logo and crates.io badge (#25)](https://github.com/lararosekelley/git-stk/pull/25)\n- [refactor(tests): split integration suite (#24)](https://github.com/lararosekelley/git-stk/pull/24)\n- [refactor(code): centralize stk config keys/resolution (#23)](https://github.com/lararosekelley/git-stk/pull/23)\n- [refactor(cli): move command bodies into their own modules (#22)](https://github.com/lararosekelley/git-stk/pull/22)\n- [refactor(code): per-command modules Run trait (#21)](https://github.com/lararosekelley/git-stk/pull/21)\n- [refactor(providers): split into folder (#20)](https://github.com/lararosekelley/git-stk/pull/20) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "body": "",
     "base_sha": "1a233ee63e977afc9acb0449c0554599dd29dd89",
     "head_sha": "f13d7d58ef1417a460848fc93a647d5702296ea3",
     "commits": 1

@@ -34,7 +34,8 @@ metadata.
 `harness/replay.py` reviews a case the way the action does, locally:
 
 - The repo is cloned at the PR head with every ref except the PR branch and `origin/main` (the
-  base) removed and unreachable objects pruned, so the fix is not in history.
+  base) removed and unreachable objects pruned, so the fix is not in history. Clones live in
+  `~/.cache/review-bot-eval/work`, outside this repo, so the reviewer cannot reach the cases.
 - The prompt and tool allowlist come from running `scripts/assemble-prompt.sh` itself.
 - `claude -p` runs with an isolated `HOME` and `ANTHROPIC_API_KEY`, as in CI, so user settings,
   plugins, and memory do not leak in. The checkout's own `CLAUDE.md` still loads, as in CI.
@@ -43,10 +44,14 @@ metadata.
 - A fake `github_inline_comment` MCP server with the action's schema records comments instead of
   posting them. It rejects lines outside the diff and buffers calls without `confirmed: true`,
   matching the action.
+- The reviewer's `HOME`, `TMPDIR`, environment, and the fake tools sit in a private temp
+  directory per run, holding only the PR's own fields, never the expected bugs.
+- PR bodies are stored without git-stk's stack note, which is rewritten after merge and lists
+  the later PRs that fixed the bugs.
 - No GitHub token is passed, so a replay cannot write to GitHub.
 
 Each run writes `findings.jsonl`, `summary.md`, `meta.json` (status, cost, turns, tokens, wall
-time), `transcript.jsonl`, and `gh.jsonl` under `runs/<config>/<case>/<rep>/`.
+time), `transcript.jsonl`, and `gh.jsonl` under `runs/<config>/<unit>/<rep>/`.
 
 Repo notes come from the PR head (`--notes head`) or are left out (`--notes none`). Notes written
 later are never used, because they may describe the bugs being measured.

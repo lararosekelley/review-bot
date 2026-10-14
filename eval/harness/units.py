@@ -19,6 +19,8 @@ def unit_id(case):
 def group(cases):
     units = {}
     for case in sorted(cases, key=lambda c: c["id"]):
+        if "git-stk:stack" in (case["pr"]["body"] or ""):
+            raise ValueError(f"{case['id']}: PR body still carries git-stk's stack note")
         uid = unit_id(case)
         unit = units.setdefault(uid, {
             "id": uid, "repo": case["repo"], "kind": "control", "split": case["split"],

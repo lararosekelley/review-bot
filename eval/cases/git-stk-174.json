@@ -6,7 +6,7 @@
   "pr": {
     "number": 94,
     "title": "chore(cli): make merge --wait more durable",
-    "body": "<!-- git-stk:closes -->\nCloses #93\n<!-- /git-stk:closes -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#94\",\"state\":\"merged\",\"title\":\"chore(cli): make merge --wait more durable\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/94\"}] -->\n- \ud83d\udfe3 ~~[chore(cli): make merge --wait more durable (#94)](https://github.com/lararosekelley/git-stk/pull/94)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "body": "<!-- git-stk:closes -->\nCloses #93\n<!-- /git-stk:closes -->",
     "base_sha": "5ca54bccf669e799d62dec86c243a036a17bb2b1",
     "head_sha": "e12851e3ff9681f288d57775a4970a079f41c02a",
     "commits": 1

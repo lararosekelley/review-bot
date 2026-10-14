@@ -6,7 +6,7 @@
   "pr": {
     "number": 303,
     "title": "fix(worktree): smarter cleanup behavior for worktrees",
-    "body": "<!-- git-stk:description -->\nimprovements to cleanup w.r.t. worktrees\n<!-- /git-stk:description -->\n\n<!-- git-stk:stack -->\n<!-- git-stk:data [{\"id\":\"#303\",\"state\":\"merged\",\"title\":\"fix(worktree): smarter cleanup behavior for worktrees\",\"url\":\"https://github.com/lararosekelley/git-stk/pull/303\"}] -->\n- \ud83d\udfe3 ~~[fix(worktree): smarter cleanup behavior for worktrees (#303)](https://github.com/lararosekelley/git-stk/pull/303)~~ (merged) \ud83d\udc48\n- `main`\n\n---\n\nStack managed by <img src=\"https://raw.githubusercontent.com/lararosekelley/git-stk/main/assets/logo.svg\" width=\"12\" height=\"12\" alt=\"\" /> [git-stk](https://github.com/lararosekelley/git-stk)\n<!-- /git-stk:stack -->",
+    "body": "<!-- git-stk:description -->\nimprovements to cleanup w.r.t. worktrees\n<!-- /git-stk:description -->",
     "base_sha": "4c82d6a4f9c94aa28f70ea70703c3ba56ba39263",
     "head_sha": "a879172037a9cdb2c5008d5c0ded951a077bf89a",
     "commits": 1

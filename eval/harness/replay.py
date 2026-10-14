@@ -32,6 +32,9 @@ import units  # noqa: E402
 ROOT = HERE.parent.parent
 EVAL = ROOT / "eval"
 NOTES_FILE = ".github/review-bot/REPO_NOTES.md"
+# Outside this repo, so a reviewer exploring around its checkout cannot reach
+# the cases and their expected bugs.
+WORK_ROOT = Path.home() / ".cache/review-bot-eval/work"
 
 
 def git(cwd, *args):
@@ -110,32 +113,43 @@ def parse_args_line(line):
 
 
 def run_one(case, repo_dir, cfg, out_dir):
+    """Review one unit.
+
+    Everything the reviewer can see, including its environment and HOME, lives
+    in a private temp directory outside this repo, and holds only the PR's own
+    fields, never the expected bugs.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
-    case_path = out_dir / "unit.json"
-    case_path.write_text(json.dumps(case, indent=2) + "\n")
     prompt, args_line = assemble(case, repo_dir, cfg)
     (out_dir / "prompt.md").write_text(prompt)
 
-    home = Path(tempfile.mkdtemp(prefix="replay-home-"))
-    bin_dir = home / "bin"
-    bin_dir.mkdir()
+    run_tmp = Path(tempfile.mkdtemp(prefix="replay-"))
+    home, tmp, bin_dir = run_tmp / "home", run_tmp / "tmp", run_tmp / "bin"
+    for d in (home, tmp, bin_dir):
+        d.mkdir()
+    case_path = run_tmp / "pr.json"
+    case_path.write_text(json.dumps({"repo": case["repo"], "pr": case["pr"]}))
+    findings, gh_log = run_tmp / "findings.jsonl", run_tmp / "gh.jsonl"
+    for f in (findings, gh_log):
+        f.write_text("")
+    for script in ("fake_gh.py", "fake_inline_comment.py"):
+        shutil.copy(HERE / script, bin_dir / script)
     gh = bin_dir / "gh"
-    gh.write_text(f'#!/bin/sh\nexec python3 -I {HERE / "fake_gh.py"} "$@"\n')
+    gh.write_text(f'#!/bin/sh\nexec python3 -I {bin_dir / "fake_gh.py"} "$@"\n')
     gh.chmod(0o755)
-    mcp = home / "mcp.json"
+    mcp = run_tmp / "mcp.json"
     mcp.write_text(json.dumps({"mcpServers": {"github_inline_comment": {
-        "command": "python3", "args": ["-I", str(HERE / "fake_inline_comment.py")],
-        "env": {"REPLAY_CASE": str(case_path), "REPLAY_FINDINGS": str(out_dir / "findings.jsonl")},
+        "command": "python3", "args": ["-I", str(bin_dir / "fake_inline_comment.py")],
+        "env": {"REPLAY_CASE": str(case_path), "REPLAY_FINDINGS": str(findings)},
     }}}))
 
-    for name in ("findings.jsonl", "gh.jsonl"):
-        (out_dir / name).write_text("")
     env = {
         "HOME": str(home),
+        "TMPDIR": str(tmp),
         "PATH": f"{bin_dir}:{os.environ['PATH']}",
         "ANTHROPIC_API_KEY": os.environ["ANTHROPIC_API_KEY"],
         "REPLAY_CASE": str(case_path),
-        "REPLAY_GH_LOG": str(out_dir / "gh.jsonl"),
+        "REPLAY_GH_LOG": str(gh_log),
         "PR_NUMBER": str(case["pr"]["number"] or 0),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
     }
@@ -150,7 +164,9 @@ def run_one(case, repo_dir, cfg, out_dir):
             status, stderr = ("ok" if proc.returncode == 0 else "error"), proc.stderr
         except subprocess.TimeoutExpired:
             status, stderr = "timeout", ""
-    shutil.rmtree(home, ignore_errors=True)
+    shutil.copy(findings, out_dir / "findings.jsonl")
+    shutil.copy(gh_log, out_dir / "gh.jsonl")
+    shutil.rmtree(run_tmp, ignore_errors=True)
 
     result = {}
     for row in (out_dir / "transcript.jsonl").read_text().splitlines():
@@ -185,7 +201,7 @@ def main():
     p.add_argument("--timeout-min", type=int, default=20)
     p.add_argument("--config", help="run directory name (default: model-effort-notes)")
     p.add_argument("--src-root", type=Path, default=Path.home() / "Code/personal")
-    p.add_argument("--work-root", type=Path, default=EVAL / "work")
+    p.add_argument("--work-root", type=Path, default=WORK_ROOT)
     cfg = p.parse_args()
     if "ANTHROPIC_API_KEY" not in os.environ:
         sys.exit("ANTHROPIC_API_KEY is required: replays run with an isolated HOME, like CI.")
