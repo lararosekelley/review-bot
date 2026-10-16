@@ -112,7 +112,7 @@ class Judge:
                  "--tools", "Read,Grep,Glob", "--allowedTools", "Read,Grep,Glob",
                  "--json-schema", json.dumps(schema), "--output-format", "json",
                  "--strict-mcp-config", "--no-session-persistence"],
-                cwd=cwd, capture_output=True, text=True, timeout=600,
+                cwd=cwd, capture_output=True, text=True, timeout=600, stdin=subprocess.DEVNULL,
                 env={"HOME": str(home), "PATH": os.environ["PATH"],
                      "ANTHROPIC_API_KEY": os.environ["ANTHROPIC_API_KEY"]},
             )
@@ -189,7 +189,7 @@ def score_run(run_dir, case, repo_dir, judge):
         "expected": [{"case": e["case"], "visibility": e["visibility"], "severity": e["severity"]}
                      for e in case["expected"]],
         "posted": len(posted),
-        "rejected": sum(f["status"] == "rejected" for f in rows),
+        "rejected": sum(f["status"] in ("rejected", "unanchored") for f in rows),
         "buffered": sum(f["status"] == "buffered" for f in rows),
         "matches": matches, "triage": triage,
     }

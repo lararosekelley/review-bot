@@ -75,8 +75,8 @@ def checkout(unit, src_root, work_root):
     return dest
 
 
-def assemble(case, repo_dir, cfg):
-    """Run the real assemble-prompt.sh and return (prompt, claude_args)."""
+def assemble(case, repo_dir, cfg, prompt_file):
+    """Run the real assemble-prompt.sh in review mode; return the tool allowlist."""
     with tempfile.NamedTemporaryFile("r", suffix=".out") as out:
         notes = NOTES_FILE if cfg.notes == "head" and (repo_dir / NOTES_FILE).exists() else ""
         env = {
@@ -85,13 +85,14 @@ def assemble(case, repo_dir, cfg):
             "GITHUB_REPOSITORY": case["repo"],
             "GITHUB_EVENT_NAME": "pull_request",
             "GITHUB_OUTPUT": out.name,
+            "MODE": "review",
             "BOT_NAME": "Code Review Bot",
             "REPO_NOTES": "",
             "REPO_NOTES_FILE": notes,
-            "FOOTER": "",
             "MODEL": cfg.model,
             "EFFORT": cfg.effort,
             "EXTRA_TOOLS": "",
+            "PROMPT_FILE": str(prompt_file),
             "PR_NUMBER": str(case["pr"]["number"] or 0),
             "PR_TITLE": case["pr"]["title"],
             "PR_DRAFT": "false",
@@ -99,49 +100,35 @@ def assemble(case, repo_dir, cfg):
         subprocess.run(["bash", str(ROOT / "scripts/assemble-prompt.sh")],
                        cwd=repo_dir, env=env, check=True)
         text = Path(out.name).read_text()
-    head, _, rest = text.partition("\n")
-    delim = head.split("<<", 1)[1]
-    prompt, _, tail = rest.partition(f"\n{delim}\n")
-    args = tail.strip().split("claude-args=", 1)[1]
-    return prompt, args
-
-
-def parse_args_line(line):
-    """Split the claude-args output, which quotes only the tool list."""
-    before, _, tools = line.partition(' --allowedTools "')
-    return before.split() + ["--allowedTools", tools.rstrip('"')]
+    return next(line[len("tools="):] for line in text.splitlines() if line.startswith("tools="))
 
 
 def run_one(case, repo_dir, cfg, out_dir):
-    """Review one unit.
+    """Review one unit with the action's own scripts: find, merge, then a dry-run post.
 
-    Everything the reviewer can see, including its environment and HOME, lives
-    in a private temp directory outside this repo, and holds only the PR's own
-    fields, never the expected bugs.
+    Everything the reviewer can see, including its environment, HOME, and the
+    scripts it runs under, lives in a private temp directory outside this repo,
+    and holds only the PR's own fields, never the expected bugs.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
-    prompt, args_line = assemble(case, repo_dir, cfg)
-    (out_dir / "prompt.md").write_text(prompt)
-
     run_tmp = Path(tempfile.mkdtemp(prefix="replay-"))
     home, tmp, bin_dir = run_tmp / "home", run_tmp / "tmp", run_tmp / "bin"
-    for d in (home, tmp, bin_dir):
-        d.mkdir()
+    for d in (home, tmp, bin_dir / "scripts", bin_dir / "prompts"):
+        d.mkdir(parents=True)
+    prompt_file = run_tmp / "prompt.md"
+    tools = assemble(case, repo_dir, cfg, prompt_file)
+    shutil.copy(prompt_file, out_dir / "prompt.md")
+
     case_path = run_tmp / "pr.json"
     case_path.write_text(json.dumps({"repo": case["repo"], "pr": case["pr"]}))
-    findings, gh_log = run_tmp / "findings.jsonl", run_tmp / "gh.jsonl"
-    for f in (findings, gh_log):
-        f.write_text("")
-    for script in ("fake_gh.py", "fake_inline_comment.py"):
-        shutil.copy(HERE / script, bin_dir / script)
+    gh_log = run_tmp / "gh.jsonl"
+    gh_log.write_text("")
+    shutil.copy(HERE / "fake_gh.py", bin_dir / "fake_gh.py")
+    shutil.copy(ROOT / "scripts/review.py", bin_dir / "scripts/review.py")
+    shutil.copy(ROOT / "prompts/findings.schema.json", bin_dir / "prompts/findings.schema.json")
     gh = bin_dir / "gh"
     gh.write_text(f'#!/bin/sh\nexec python3 -I {bin_dir / "fake_gh.py"} "$@"\n')
     gh.chmod(0o755)
-    mcp = run_tmp / "mcp.json"
-    mcp.write_text(json.dumps({"mcpServers": {"github_inline_comment": {
-        "command": "python3", "args": ["-I", str(bin_dir / "fake_inline_comment.py")],
-        "env": {"REPLAY_CASE": str(case_path), "REPLAY_FINDINGS": str(findings)},
-    }}}))
 
     env = {
         "HOME": str(home),
@@ -150,38 +137,51 @@ def run_one(case, repo_dir, cfg, out_dir):
         "ANTHROPIC_API_KEY": os.environ["ANTHROPIC_API_KEY"],
         "REPLAY_CASE": str(case_path),
         "REPLAY_GH_LOG": str(gh_log),
-        "PR_NUMBER": str(case["pr"]["number"] or 0),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
     }
-    cmd = ["claude", "-p", prompt, *parse_args_line(args_line),
-           "--mcp-config", str(mcp), "--strict-mcp-config",
-           "--output-format", "stream-json", "--verbose"]
-    start = time.time()
-    with open(out_dir / "transcript.jsonl", "w") as transcript:
+    review = ["python3", "-I", str(bin_dir / "scripts/review.py")]
+    steps = [
+        [*review, "find", "--prompt-file", str(prompt_file), "--passes", str(cfg.passes),
+         "--model", cfg.model, "--effort", cfg.effort, "--tools", tools,
+         "--out-dir", str(run_tmp / "passes"), "--transcript-dir", str(run_tmp / "transcripts")],
+        [*review, "merge", "--in-dir", str(run_tmp / "passes"), "--min-votes", str(cfg.min_votes),
+         "--merge-model", cfg.merge_model, "--out", str(run_tmp / "merged.json")],
+        [*review, "post", "--merged", str(run_tmp / "merged.json"), "--pr", str(case["pr"]["number"] or 0),
+         "--dry-run", str(run_tmp / "findings.jsonl")],
+    ]
+    start, status, log = time.time(), "ok", []
+    for step in steps:
         try:
-            proc = subprocess.run(cmd, cwd=repo_dir, env=env, stdout=transcript,
-                                  stderr=subprocess.PIPE, text=True, timeout=cfg.timeout_min * 60)
-            status, stderr = ("ok" if proc.returncode == 0 else "error"), proc.stderr
+            proc = subprocess.run(step, cwd=repo_dir, env=env, capture_output=True, text=True,
+                                  timeout=cfg.timeout_min * 60)
+            log.append(proc.stdout + proc.stderr)
+            if proc.returncode:
+                status = "error"
+                break
         except subprocess.TimeoutExpired:
-            status, stderr = "timeout", ""
-    shutil.copy(findings, out_dir / "findings.jsonl")
-    shutil.copy(gh_log, out_dir / "gh.jsonl")
+            status = "timeout"
+            break
+
+    for src, dst in (("findings.jsonl", "findings.jsonl"), ("findings.summary.md", "summary.md"),
+                     ("merged.json", "merged.json"), ("gh.jsonl", "gh.jsonl")):
+        if (run_tmp / src).exists():
+            shutil.copy(run_tmp / src, out_dir / dst)
+    for d in ("passes", "transcripts"):
+        if (run_tmp / d).exists():
+            shutil.copytree(run_tmp / d, out_dir / d, dirs_exist_ok=True)
     shutil.rmtree(run_tmp, ignore_errors=True)
 
-    result = {}
-    for row in (out_dir / "transcript.jsonl").read_text().splitlines():
-        try:
-            event = json.loads(row)
-        except json.JSONDecodeError:
-            continue
-        if event.get("type") == "result":
-            result = event
-    (out_dir / "summary.md").write_text(result.get("result") or "")
+    passes = [json.loads(p.read_text()) for p in sorted((out_dir / "passes").glob("pass-*.json"))] \
+        if (out_dir / "passes").exists() else []
+    merged = json.loads((out_dir / "merged.json").read_text()) if (out_dir / "merged.json").exists() else {}
     meta = {
         "case": case["id"], "model": cfg.model, "effort": cfg.effort, "notes": cfg.notes,
+        "passes": cfg.passes, "min_votes": merged.get("min_votes"), "merge": merged.get("merge"),
         "status": status, "wall_s": round(time.time() - start, 1),
-        "cost_usd": result.get("total_cost_usd"), "num_turns": result.get("num_turns"),
-        "usage": result.get("usage"), "stderr": stderr[-2000:],
+        "pass_wall_s": [p["wall_s"] for p in passes],
+        "cost_usd": merged.get("cost_usd", sum(p.get("cost_usd") or 0 for p in passes)),
+        "num_turns": sum(p.get("num_turns") or 0 for p in passes),
+        "log": "".join(log)[-4000:],
     }
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
     return meta
@@ -196,6 +196,9 @@ def main():
     p.add_argument("--effort", default="high")
     p.add_argument("--notes", choices=["head", "none"], default="head",
                    help="use the repo notes file present at the PR head, or none")
+    p.add_argument("--passes", type=int, default=1)
+    p.add_argument("--min-votes", type=int, default=0, help="0 picks 1 for one pass, 2 otherwise")
+    p.add_argument("--merge-model", default="claude-haiku-4-5-20251001")
     p.add_argument("--reps", type=int, default=1)
     p.add_argument("--jobs", type=int, default=2)
     p.add_argument("--timeout-min", type=int, default=20)
@@ -205,7 +208,7 @@ def main():
     cfg = p.parse_args()
     if "ANTHROPIC_API_KEY" not in os.environ:
         sys.exit("ANTHROPIC_API_KEY is required: replays run with an isolated HOME, like CI.")
-    name = cfg.config or f"{cfg.model}-{cfg.effort or 'unset'}-notes_{cfg.notes}"
+    name = cfg.config or f"{cfg.model}-{cfg.effort or 'unset'}-p{cfg.passes}-notes_{cfg.notes}"
 
     jobs = []
     for unit in units.load(cfg.cases).values():

@@ -31,27 +31,28 @@ metadata.
 
 ## Replay
 
-`harness/replay.py` reviews a case the way the action does, locally:
+`harness/replay.py` reviews a unit with the action's own scripts, locally: `assemble-prompt.sh` in
+review mode, then `review.py find`, `merge`, and `post --dry-run`.
 
 - The repo is cloned at the PR head with every ref except the PR branch and `origin/main` (the
   base) removed and unreachable objects pruned, so the fix is not in history. Clones live in
   `~/.cache/review-bot-eval/work`, outside this repo, so the reviewer cannot reach the cases.
-- The prompt and tool allowlist come from running `scripts/assemble-prompt.sh` itself.
+- `--passes`, `--min-votes`, and `--merge-model` set the pipeline as the action's inputs do.
 - `claude -p` runs with an isolated `HOME` and `ANTHROPIC_API_KEY`, as in CI, so user settings,
   plugins, and memory do not leak in. The checkout's own `CLAUDE.md` still loads, as in CI.
 - A fake `gh` answers `pr view`, `pr diff`, and `pr checks` from the case and the checkout, and
   refuses everything else. Checks always pass.
-- A fake `github_inline_comment` MCP server with the action's schema records comments instead of
-  posting them. It rejects lines outside the diff and buffers calls without `confirmed: true`,
-  matching the action.
+- The dry-run post places findings on the diff exactly as a real post would and writes them to
+  `findings.jsonl` instead of posting them.
 - The reviewer's `HOME`, `TMPDIR`, environment, and the fake tools sit in a private temp
   directory per run, holding only the PR's own fields, never the expected bugs.
 - PR bodies are stored without git-stk's stack note, which is rewritten after merge and lists
   the later PRs that fixed the bugs.
 - No GitHub token is passed, so a replay cannot write to GitHub.
 
-Each run writes `findings.jsonl`, `summary.md`, `meta.json` (status, cost, turns, tokens, wall
-time), `transcript.jsonl`, and `gh.jsonl` under `runs/<config>/<unit>/<rep>/`.
+Each run writes `findings.jsonl`, `summary.md`, `merged.json`, `meta.json` (status, cost, turns,
+wall time per pass and overall), per-pass results and transcripts, and `gh.jsonl` under
+`runs/<config>/<unit>/<rep>/`.
 
 Repo notes come from the PR head (`--notes head`) or are left out (`--notes none`). Notes written
 later are never used, because they may describe the bugs being measured.
@@ -95,13 +96,14 @@ separate verification pass. A verification pass is judged on noise removed again
 - `harness/compare.py` compares two configurations with a paired bootstrap over units.
 - `harness/ensemble.py` estimates multi-pass reviews (union, or a 2-pass vote) from a
   configuration's independent reps.
+- `harness/check_judge.py` checks the judge's triage calls against the labeled sample.
 - `harness/sample_triage.py` writes a sample of the judge's triage calls to `labels/` for a person
   to label, to check the judge.
 - `mine/run_all.py` rebuilds the cases from git history and PR metadata.
 
 ## Fidelity check
 
-A private sandbox repo runs the real action on about 10 smoke cases whenever the pinned
-claude-code-action version changes, and compares its comments with the local replay of the same
-cases. This covers what the replay fakes: sticky comments, comment buffering and classification,
-and the action's own prompt wrapping.
+A private sandbox repo runs the real action on about 10 smoke cases whenever the pinned Claude Code
+CLI version changes, and compares its comments with the local replay of the same cases. This covers
+what the replay fakes: posting the review and inline comments through the GitHub API, updating the
+summary comment, and loading prior findings on a re-review.
