@@ -75,6 +75,7 @@ with:
 | `passes`               | `1`                         | Independent review passes, run in parallel. With more than one, only findings raised by at least `min-votes` passes are posted. |
 | `min-votes`            | auto                        | Passes that must raise a finding. Defaults to 1 for a single pass, 2 otherwise.                                                 |
 | `merge-model`          | `claude-haiku-4-5-20251001` | Model that groups duplicate findings across passes.                                                                             |
+| `claude-code-version`  | `2.1.301`                   | Claude Code CLI version the review passes run.                                                                                  |
 | `bot-name`             | `Code Review Bot`           | The name it signs the summary with.                                                                                             |
 | `repo-notes-file`      | –                           | Path to your repo-specific notes, e.g. `.github/review-bot/REPO_NOTES.md`.                                                      |
 | `repo-notes`           | –                           | The same thing inline, for a few lines you do not want in a file.                                                               |

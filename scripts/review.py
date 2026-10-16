@@ -96,9 +96,21 @@ def anchor(finding, valid, slack=ANCHOR_SLACK):
     return (nearest[0][1], 0) if nearest else None
 
 
+SECRET_ENV = ("ANTHROPIC_API_KEY", "GH_TOKEN", "GITHUB_TOKEN")
+SUGGESTION = re.compile(r"```suggestion\n.*?```\n?", re.S)
+
+
+def redact(text):
+    for name in SECRET_ENV:
+        value = os.environ.get(name, "")
+        if len(value) >= 8:
+            text = text.replace(value, "[redacted]")
+    return text
+
+
 def sanitize(text, limit):
-    """Cap model text and remove anything that could pass for this script's markers."""
-    text = MARKER_TEXT.sub("review-bot", text or "").strip()
+    """Cap model text, redact this run's secrets, and defuse anything that looks like our markers."""
+    text = MARKER_TEXT.sub("review-bot", redact(text or "")).strip()
     return text if len(text) <= limit else text[: limit - 3].rstrip() + "..."
 
 
@@ -141,6 +153,24 @@ def combine(passes, groups, min_votes):
             "prior": prior, "findings": findings}
 
 
+def place(findings, valid):
+    """Split findings into those placed on the diff and those that cannot be.
+
+    A finding moved to a nearby line loses its suggestion block, which would
+    otherwise replace the wrong lines.
+    """
+    placed, unanchored = [], []
+    for f in findings:
+        spot = anchor(f, valid)
+        if not spot:
+            unanchored.append(f)
+            continue
+        moved = spot != (f["line"], f.get("start_line") or 0)
+        body = SUGGESTION.sub("", f["body"]).strip() if moved else f["body"]
+        placed.append({**f, "body": body, "posted_line": spot[0], "posted_start": spot[1]})
+    return placed, unanchored
+
+
 def drop_reported(findings, prior_comments, prior_status):
     """Drop new findings that repeat a prior finding the review still considers open."""
     still_open = [c for c in prior_comments if prior_status.get(c["id"]) == "open"]
@@ -176,10 +206,13 @@ def render_summary(merged, posted, unanchored, bot_name, footer, previous_confid
     for key in ("coverage", "ci", "praise"):
         if notes.get(key):
             out += ["", sanitize(notes[key], 2000)]
-    passes = merged.get("passes", 1)
-    if passes > 1:
-        out += ["", f"<sub>{passes} independent passes; findings raised by at least "
-                    f"{merged['min_votes']} were kept.</sub>"]
+    passes, requested = merged.get("passes", 1), merged.get("passes_requested", 1)
+    if requested > 1:
+        note = f"{passes} independent passes; findings raised by at least {merged['min_votes']} were kept."
+        if passes < requested:
+            note = (f"{requested - passes} of {requested} review passes failed. {note}"
+                    + (" The vote threshold was lowered to match." if merged.get("votes_lowered") else ""))
+        out += ["", f"<sub>{note}</sub>"]
     if footer:
         out += ["", "---", "", f"*{sanitize(footer, 500)}*"]
     return "\n".join(out) + "\n"
@@ -306,8 +339,8 @@ def cmd_merge(a):
             out["findings"] = [{**f, "id": f"{r['pass']}.{i}", "pass": r["pass"]}
                                for i, f in enumerate(out["findings"])]
             passes.append(out)
-    min_votes = a.min_votes or (1 if len(records) == 1 else 2)
-    min_votes = min(min_votes, len(passes))
+    wanted = a.min_votes or (1 if len(records) == 1 else 2)
+    min_votes = min(wanted, len(passes))
     findings = [f for p in passes for f in p["findings"]]
     ids = [f["id"] for f in findings]
     method, merge_cost = "single", 0
@@ -322,7 +355,8 @@ def cmd_merge(a):
             print(f"merge call unusable ({e}); grouping by location")
             groups, method = positional_groups(findings), "positional"
     merged = combine(passes, groups, min_votes)
-    merged.update(passes=len(passes), passes_requested=len(records), min_votes=min_votes, merge=method,
+    merged.update(passes=len(passes), passes_requested=len(records), min_votes=min_votes,
+                  votes_lowered=min_votes < wanted, merge=method,
                   cost_usd=round(sum(r["cost_usd"] or 0 for r in records) + merge_cost, 4))
     Path(a.out).write_text(json.dumps(merged, indent=2) + "\n")
     print(f"{len(findings)} findings from {len(passes)} passes -> {len(merged['findings'])} kept "
@@ -342,14 +376,7 @@ def cmd_post(a):
     merged = json.loads(Path(a.merged).read_text())
     prior = json.loads(Path(a.prior).read_text()) if a.prior and Path(a.prior).exists() else []
     status = {p["id"]: p["status"] for p in merged["prior"]}
-    valid = parse_diff(pr_diff(a))
-    placed, unanchored = [], []
-    for f in drop_reported(merged["findings"], prior, status):
-        spot = anchor(f, valid)
-        if spot:
-            placed.append({**f, "posted_line": spot[0], "posted_start": spot[1]})
-        else:
-            unanchored.append(f)
+    placed, unanchored = place(drop_reported(merged["findings"], prior, status), parse_diff(pr_diff(a)))
     prior_counts = Counter(status[p["id"]] for p in prior if p["id"] in status)
 
     if a.dry_run:
@@ -405,11 +432,20 @@ def post_inline(a, head, placed, unanchored):
         review = gh_json("api", "-X", "POST", f"repos/{a.repo}/pulls/{a.pr}/reviews", "--input", "-", payload={
             "commit_id": head, "event": "COMMENT", "comments": comments,
             "body": f"{sanitize(a.bot_name, 100)}: {len(comments)} finding(s) on {head[:7]}."})
-        for c in gh_pages(f"repos/{a.repo}/pulls/{a.pr}/reviews/{review['id']}/comments"):
-            if m := POSTED_N.search(c["body"]):
-                posted_by_n[int(m[1])] = c["html_url"]
     except RuntimeError as e:
+        review = None
         print(f"batch review rejected ({e}); posting comments one at a time")
+    if review:
+        # The review is posted; failing to list its comments only costs the summary its links.
+        try:
+            for c in gh_pages(f"repos/{a.repo}/pulls/{a.pr}/reviews/{review['id']}/comments"):
+                if m := POSTED_N.search(c["body"]):
+                    posted_by_n[int(m[1])] = c["html_url"]
+        except RuntimeError as e:
+            print(f"could not list the review's comments ({e}); linking the review instead")
+        for n in range(len(comments)):
+            posted_by_n.setdefault(n, review.get("html_url", ""))
+    else:
         for n, c in enumerate(comments):
             try:
                 made = gh_json("api", "-X", "POST", f"repos/{a.repo}/pulls/{a.pr}/comments", "--input", "-",

@@ -33,6 +33,11 @@ on:
         type: string
         required: false
         default: "claude-haiku-4-5-20251001"
+      claude-code-version:
+        description: "Claude Code CLI version the review passes run."
+        type: string
+        required: false
+        default: "2.1.301"
       bot-name:
         type: string
         required: false
@@ -103,11 +108,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
     steps:
+      # Comment events run with the API key, so a fork's code is never checked
+      # out next to it: a comment on a PR from another repo reviews the base.
+      - name: Resolve the ref to review
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: |
+          ref="$GITHUB_SHA"
+          if [ "$EVENT" = pull_request ]; then
+            ref="$PR_HEAD_SHA"
+          elif [ "$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json isCrossRepository --jq .isCrossRepository)" = false ]; then
+            ref="${PR_HEAD_SHA:-refs/pull/$PR_NUMBER/head}"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-          # A comment event carries no PR head, so check out the PR's head ref.
-          ref: ${{ github.event.pull_request.head.sha || (github.event.issue.pull_request && format('refs/pull/{0}/head', github.event.issue.number)) || github.sha }}
+          ref: ${{ steps.ref.outputs.ref }}
 
       # Pinned to the same moving major tag this workflow is released under, so
       # a caller on @v1 always gets a matching pair. Calling this workflow at
@@ -121,6 +143,7 @@ jobs:
           passes: ${{ inputs.passes }}
           min-votes: ${{ inputs.min-votes > 0 && inputs.min-votes || '' }}
           merge-model: ${{ inputs.merge-model }}
+          claude-code-version: ${{ inputs.claude-code-version }}
           trigger-phrase: ${{ inputs.trigger-phrase }}
           bot-name: ${{ inputs.bot-name }}
           repo-notes: ${{ inputs.repo-notes }}

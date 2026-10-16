@@ -156,6 +156,8 @@ runs:
       if: steps.mode.outputs.mode == 'review'
       shell: bash
       env:
+        # Passed only so the post step can redact it from anything it posts.
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
         GH_TOKEN: ${{ inputs.github-token }}
         WORK_DIR: ${{ runner.temp }}/review-bot
         PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}

@@ -34,10 +34,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # Comment events run with the API key, so a fork's code is never checked
+      # out next to it: a comment on a PR from another repo reviews the base.
+      - name: Resolve the ref to review
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: |
+          ref="$GITHUB_SHA"
+          if [ "$EVENT" = pull_request ]; then
+            ref="$PR_HEAD_SHA"
+          elif [ "$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json isCrossRepository --jq .isCrossRepository)" = false ]; then
+            ref="${PR_HEAD_SHA:-refs/pull/$PR_NUMBER/head}"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ steps.ref.outputs.ref }}
 
       - uses: lararosekelley/review-bot@v1
         with:

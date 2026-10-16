@@ -1,6 +1,9 @@
+import os
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import review  # noqa: E402
@@ -137,7 +140,7 @@ class Post(unittest.TestCase):
         self.assertIn("review-bot:finding n=3", body)
 
     def test_summary(self):
-        merged = {**pass_output([]), "confidence": 70, "passes": 3, "min_votes": 2}
+        merged = {**pass_output([]), "confidence": 70, "passes": 3, "passes_requested": 3, "min_votes": 2}
         posted = [{**finding(), "posted_line": 11, "url": "https://x/1"}]
         text = review.render_summary(merged, posted, [], "Bot", "advisory", 80, {"fixed": 1})
         self.assertTrue(text.startswith(review.SUMMARY_MARKER))
@@ -150,6 +153,76 @@ class Post(unittest.TestCase):
     def test_summary_without_findings(self):
         text = review.render_summary({**pass_output([]), "passes": 1}, [], [], "Bot", "", None, {})
         self.assertIn("No actionable findings.", text)
+
+
+class Place(unittest.TestCase):
+    def test_moved_finding_loses_its_suggestion(self):
+        valid = review.parse_diff(DIFF)
+        body = "Fix it.\n\n```suggestion\nnew\n```\n"
+        placed, _ = review.place([finding(line=12, body=body), finding(line=16, body=body)], valid)
+        self.assertIn("```suggestion", placed[0]["body"])
+        self.assertEqual(placed[1]["posted_line"], 14)
+        self.assertNotIn("```suggestion", placed[1]["body"])
+        self.assertEqual(placed[1]["body"], "Fix it.")
+
+    def test_unanchored(self):
+        placed, unanchored = review.place([finding(line=99)], review.parse_diff(DIFF))
+        self.assertEqual((placed, [f["line"] for f in unanchored]), ([], [99]))
+
+
+class Redact(unittest.TestCase):
+    def test_secrets_never_reach_posted_text(self):
+        with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-secret-value", "GH_TOKEN": "ghs_tokenvalue"}):
+            text = review.sanitize("key sk-ant-secret-value and ghs_tokenvalue", 1000)
+            body = review.inline_body(finding(body="leak: sk-ant-secret-value"), 0)
+        self.assertEqual(text, "key [redacted] and [redacted]")
+        self.assertNotIn("sk-ant-secret-value", body)
+
+
+class PostInline(unittest.TestCase):
+    ARGS = SimpleNamespace(repo="o/r", pr="5", bot_name="Bot")
+
+    def placed(self):
+        return [{**finding(), "posted_line": 11, "posted_start": 0}, {**finding(line=12), "posted_line": 12, "posted_start": 0}]
+
+    def test_listing_failure_does_not_repost(self):
+        calls = []
+
+        def gh_json(*args, payload=None):
+            calls.append(args[2])
+            return {"id": 1, "html_url": "https://review"}
+
+        def gh_pages(path):
+            raise RuntimeError("listing failed")
+
+        with mock.patch.object(review, "gh_json", gh_json), mock.patch.object(review, "gh_pages", gh_pages):
+            unanchored = []
+            posted = review.post_inline(self.ARGS, "abc1234", self.placed(), unanchored)
+        self.assertEqual(calls, ["POST"])
+        self.assertEqual([p["url"] for p in posted], ["https://review", "https://review"])
+        self.assertEqual(unanchored, [])
+
+    def test_rejected_batch_falls_back_to_single_comments(self):
+        def gh_json(*args, payload=None):
+            if args[3].endswith("/reviews"):
+                raise RuntimeError("422")
+            if payload["line"] == 12:
+                raise RuntimeError("line not in diff")
+            return {"html_url": f"https://c/{payload['line']}"}
+
+        with mock.patch.object(review, "gh_json", gh_json):
+            unanchored = []
+            posted = review.post_inline(self.ARGS, "abc1234", self.placed(), unanchored)
+        self.assertEqual([p["url"] for p in posted], ["https://c/11"])
+        self.assertEqual([f["line"] for f in unanchored], [12])
+
+
+class FailedPasses(unittest.TestCase):
+    def test_summary_says_passes_failed(self):
+        merged = {**pass_output([]), "passes": 1, "passes_requested": 3, "min_votes": 1, "votes_lowered": True}
+        text = review.render_summary(merged, [], [], "Bot", "", None, {})
+        self.assertIn("2 of 3 review passes failed", text)
+        self.assertIn("vote threshold was lowered", text)
 
 
 if __name__ == "__main__":
