@@ -333,5 +333,49 @@ class Rereview(unittest.TestCase):
                                {1: "fixed"})
 
 
+RESULT = {"total_cost_usd": 0.1, "usage": {"input_tokens": 10, "cache_creation_input_tokens": 1000,
+                                           "cache_read_input_tokens": 9000, "output_tokens": 500}}
+
+
+class Usage(unittest.TestCase):
+    def test_usage_of_and_totals(self):
+        u = review.usage_of(RESULT)
+        self.assertEqual(u, {"input": 10, "cache_write": 1000, "cache_read": 9000, "output": 500})
+        self.assertEqual(review.usage_of({}), {"input": 0, "cache_write": 0, "cache_read": 0, "output": 0})
+        self.assertEqual(review.add_usage(u, u, None)["output"], 1000)
+        self.assertEqual(review.tokens_in(u), 10010)
+
+    def test_usage_line(self):
+        u = review.usage_of(RESULT)
+        one = {"cost_usd": 0.1, "passes_requested": 1, "usage": {"total": u}}
+        self.assertEqual(review.usage_line(one),
+                         "Estimated cost $0.100: 10,010 tokens in (9,000 read from cache), 500 out.")
+        three = {**one, "passes_requested": 3, "merge": "model"}
+        self.assertIn("across 3 passes and a merge:", review.usage_line(three))
+        self.assertEqual(review.usage_line({}), "")
+
+    def test_summary_shows_usage_only_when_asked(self):
+        merged = {**pass_output([]), "passes": 1, "cost_usd": 0.1,
+                  "usage": {"total": review.usage_of(RESULT)}}
+        self.assertIn("Estimated cost $0.100", review.render_summary(merged, [], [], "B", "", None, {}, True))
+        self.assertNotIn("Estimated cost", review.render_summary(merged, [], [], "B", "", None, {}, False))
+
+    def test_merge_records_usage_per_pass_and_total(self):
+        with tempfile.TemporaryDirectory() as d:
+            for i in (1, 2):
+                Path(d, f"pass-{i}.json").write_text(__import__("json").dumps({
+                    "pass": i, "ok": i == 1, "cost_usd": 0.1, "usage": review.usage_of(RESULT),
+                    "output": pass_output([]) if i == 1 else None}))
+            out = Path(d, "merged.json")
+            review.cmd_merge(SimpleNamespace(in_dir=d, min_votes=0, merge_model="m", out=str(out)))
+            merged = __import__("json").loads(out.read_text())
+        self.assertEqual(merged["cost_usd"], 0.2)
+        self.assertEqual(merged["usage"]["total"]["output"], 1000)
+        self.assertEqual([p["pass"] for p in merged["usage"]["passes"]], [1, 2])
+        table = review.usage_table(merged)
+        self.assertIn("| Pass 2 | $0.100 | 10,010 | 9,000 | 500 |", table)
+        self.assertIn("| Total | $0.200 | 20,020 | 18,000 | 1,000 |", table)
+
+
 if __name__ == "__main__":
     unittest.main()

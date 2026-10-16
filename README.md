@@ -83,6 +83,7 @@ with:
 | `min-votes`            | auto                        | Passes that must raise a finding. Defaults to 1 for a single pass, 2 otherwise.                                                 |
 | `merge-model`          | `claude-haiku-4-5-20251001` | Model that groups duplicate findings across passes.                                                                             |
 | `claude-code-version`  | `2.1.301`                   | Claude Code CLI version the review passes run.                                                                                  |
+| `show-usage`           | `true`                      | Adds the review's estimated cost and tokens in and out to the summary. The job's step summary always has them, per pass.        |
 | `bot-name`             | `Code Review Bot`           | The name it signs the summary with.                                                                                             |
 | `repo-notes-file`      | –                           | Path to your repo-specific notes, e.g. `.github/review-bot/REPO_NOTES.md`.                                                      |
 | `repo-notes`           | –                           | The same thing inline, for a few lines you do not want in a file.                                                               |
@@ -140,6 +141,8 @@ what keeps the reviews readable.
   typically costs $0.10 to $0.13 and takes about 30 seconds. `claude-opus-5-5` costs about three
   times as much and takes about a minute, and in the same measurements it found more real defects
   and posted fewer nitpicks. Large PRs cost more with either.
+- Each summary ends with the review's estimated cost and token counts, from Claude Code's own
+  estimate. Set `show-usage: false` to leave them out.
 - `passes` multiplies the cost: three passes cost about three times one. Voting mostly removes
   nitpicks rather than finding more defects, and the merge step adds time.
 - The default gating exists because a review costs money. Widen `allowed-associations`

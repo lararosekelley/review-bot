@@ -5,6 +5,14 @@ What changed in each version, for the people using the action. Each section is d
 publishes the section matching the tag as the GitHub release notes, so headings must stay
 `## X.Y.Z - YYYY-MM-DD`.
 
+## 1.2.2 - 2026-10-16
+
+### Added
+
+- The summary comment ends with the review's estimated cost and its tokens in (with how many were
+  read from cache) and out, totaled across passes and the merge. `show-usage: false` leaves it out.
+  The job's step summary always has the same numbers, per pass.
+
 ## 1.2.1 - 2026-10-16
 
 ### Fixed

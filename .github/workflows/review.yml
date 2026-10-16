@@ -33,6 +33,11 @@ on:
         type: string
         required: false
         default: "claude-haiku-4-5-20251001"
+      show-usage:
+        description: "Add the review's estimated cost and token counts to the summary comment."
+        type: boolean
+        required: false
+        default: true
       claude-code-version:
         description: "Claude Code CLI version the review passes run."
         type: string
@@ -144,6 +149,7 @@ jobs:
           min-votes: ${{ inputs.min-votes > 0 && inputs.min-votes || '' }}
           merge-model: ${{ inputs.merge-model }}
           claude-code-version: ${{ inputs.claude-code-version }}
+          show-usage: ${{ inputs.show-usage }}
           trigger-phrase: ${{ inputs.trigger-phrase }}
           bot-name: ${{ inputs.bot-name }}
           repo-notes: ${{ inputs.repo-notes }}

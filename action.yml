@@ -50,6 +50,10 @@ inputs:
     description: "Model that groups duplicate findings across passes."
     required: false
     default: "claude-haiku-4-5-20251001"
+  show-usage:
+    description: "Add the review's estimated cost and token counts to the summary comment. The job's step summary always shows them."
+    required: false
+    default: "true"
   trigger-phrase:
     description: "A PR comment containing this phrase followed by \"review\" runs a full re-review; other comments get a reply."
     required: false
@@ -177,11 +181,12 @@ runs:
         BOT_NAME: ${{ inputs.bot-name }}
         FOOTER: ${{ inputs.footer }}
         TRIGGER_COMMENT_ID: ${{ github.event_name == 'issue_comment' && github.event.comment.id || '' }}
+        SHOW_USAGE: ${{ inputs.show-usage }}
       run: >-
         python3 "$GITHUB_ACTION_PATH/scripts/review.py" post --merged "$WORK_DIR/merged.json"
         --prior "$WORK_DIR/prior.json" --repo "$GITHUB_REPOSITORY" --pr "$PR_NUMBER"
         --bot-name "$BOT_NAME" --footer "$FOOTER"
-        --trigger-comment-id "$TRIGGER_COMMENT_ID" --ack-file "$WORK_DIR/ack.json"
+        --trigger-comment-id "$TRIGGER_COMMENT_ID" --ack-file "$WORK_DIR/ack.json" --show-usage "$SHOW_USAGE"
 
     - name: Report a failed review
       if: failure() && steps.mode.outputs.mode == 'review' && github.event_name == 'issue_comment'

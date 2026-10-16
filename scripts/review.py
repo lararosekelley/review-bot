@@ -207,21 +207,73 @@ def inline_body(f, n):
     return f"**[{category(f)}]** {title}\n\n{body}\n\n{FINDING_MARKER} n={n} -->"
 
 
-def render_summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts):
+USAGE_FIELDS = {"input": "input_tokens", "cache_write": "cache_creation_input_tokens",
+                "cache_read": "cache_read_input_tokens", "output": "output_tokens"}
+
+
+def usage_of(result):
+    """Token counts from a Claude Code result, zero where the CLI reported none."""
+    usage = (result or {}).get("usage") or {}
+    return {k: int(usage.get(v) or 0) for k, v in USAGE_FIELDS.items()}
+
+
+def add_usage(*parts):
+    total = {k: 0 for k in USAGE_FIELDS}
+    for part in parts:
+        for k in total:
+            total[k] += (part or {}).get(k, 0)
+    return total
+
+
+def tokens_in(u):
+    return u["input"] + u["cache_write"] + u["cache_read"]
+
+
+def usage_line(merged):
+    """One line on what the review cost, from the CLI's own estimates."""
+    u = merged.get("usage", {}).get("total")
+    if not u:
+        return ""
+    where = ""
+    if merged.get("passes_requested", 1) > 1:
+        where = f" across {merged['passes_requested']} passes" + (" and a merge" if merged.get("merge") == "model" else "")
+    return (f"Estimated cost ${merged.get('cost_usd', 0):.3f}{where}: {tokens_in(u):,} tokens in "
+            f"({u['cache_read']:,} read from cache), {u['output']:,} out.")
+
+
+def usage_table(merged):
+    """Markdown table of each pass, the merge, and the total, for the job's step summary."""
+    usage = merged.get("usage") or {}
+    rows = [(f"Pass {p['pass']}", p) for p in usage.get("passes", [])]
+    if usage.get("merge"):
+        rows.append(("Merge", usage["merge"]))
+    if usage.get("total"):
+        rows.append(("Total", {**usage["total"], "cost_usd": merged.get("cost_usd", 0)}))
+    lines = ["| Step | Est. cost | Tokens in | From cache | Tokens out |", "| --- | --- | --- | --- | --- |"]
+    for name, u in rows:
+        lines.append(f"| {name} | ${u.get('cost_usd') or 0:.3f} | {tokens_in(u):,} | {u['cache_read']:,} | "
+                     f"{u['output']:,} |")
+    return "\n".join(lines) + "\n"
+
+
+def render_summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts,
+                   show_usage=False):
     """The summary comment, kept under GitHub's size limit.
 
     If it is too long, the bodies of findings that could not be placed are left
     out first, then the text is cut.
     """
-    text = _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, True)
+    args = (merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, show_usage)
+    text = _summary(*args, True)
     if len(text) > SUMMARY_LIMIT:
-        text = _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, False)
+        text = _summary(*args, False)
     if len(text) > SUMMARY_LIMIT:
         text = text[:SUMMARY_LIMIT].rstrip() + "\n\n*Summary truncated.*\n"
     return text
 
 
-def _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, bodies):
+def _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, show_usage,
+             bodies):
     conf = merged["confidence"]
     head = f"## {sanitize(bot_name, 100)} - Confidence: {conf}/100"
     if previous_confidence is not None:
@@ -252,6 +304,8 @@ def _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, 
             note = (f"{requested - passes} of {requested} review passes failed. {note}"
                     + (" The vote threshold was lowered to match." if merged.get("votes_lowered") else ""))
         out += ["", f"<sub>{note}</sub>"]
+    if show_usage and (line := usage_line(merged)):
+        out += ["", f"<sub>{line}</sub>"]
     if footer:
         out += ["", "---", "", f"*{sanitize(footer, 500)}*"]
     return "\n".join(out) + "\n"
@@ -418,6 +472,7 @@ def run_pass(i, a, prompt, schema):
         out = json.loads(stdout)
         record["cost_usd"] = out.get("total_cost_usd")
         record["num_turns"] = out.get("num_turns")
+        record["usage"] = usage_of(out)
         result = out.get("structured_output") or json.loads(out["result"])
         record.update(ok=True, output=result)
     except (json.JSONDecodeError, KeyError, TypeError) as e:
@@ -460,7 +515,8 @@ def merge_with_model(findings, model):
                           stdin=subprocess.DEVNULL)
     print(f"merge call: {time.time() - start:.1f}s")
     out = json.loads(proc.stdout)
-    return (out.get("structured_output") or json.loads(out["result"]))["groups"], out.get("total_cost_usd") or 0
+    groups = (out.get("structured_output") or json.loads(out["result"]))["groups"]
+    return groups, {"cost_usd": out.get("total_cost_usd") or 0, **usage_of(out)}
 
 
 def cmd_merge(a):
@@ -476,11 +532,11 @@ def cmd_merge(a):
     min_votes = min(wanted, len(passes))
     findings = [f for p in passes for f in p["findings"]]
     ids = [f["id"] for f in findings]
-    method, merge_cost = "single", 0
+    method, merge_usage = "single", None
     groups = [{"ids": [i], "keep": i} for i in ids]
     if len(passes) > 1 and findings:
         try:
-            groups, merge_cost = merge_with_model(findings, a.merge_model)
+            groups, merge_usage = merge_with_model(findings, a.merge_model)
             method = "model"
             if not valid_groups(groups, ids):
                 raise ValueError("groups do not cover every finding exactly once")
@@ -488,9 +544,12 @@ def cmd_merge(a):
             print(f"merge call unusable ({e}); grouping by location")
             groups, method = positional_groups(findings), "positional"
     merged = combine(passes, groups, min_votes)
+    pass_usage = [{"pass": r["pass"], "cost_usd": r["cost_usd"] or 0, **(r.get("usage") or usage_of(None))}
+                  for r in records]
     merged.update(passes=len(passes), passes_requested=len(records), min_votes=min_votes,
                   votes_lowered=min_votes < wanted, merge=method,
-                  cost_usd=round(sum(r["cost_usd"] or 0 for r in records) + merge_cost, 4))
+                  cost_usd=round(sum(u["cost_usd"] for u in pass_usage) + ((merge_usage or {}).get("cost_usd") or 0), 4),
+                  usage={"passes": pass_usage, "merge": merge_usage, "total": add_usage(*pass_usage, merge_usage)})
     Path(a.out).write_text(json.dumps(merged, indent=2) + "\n")
     print(f"{len(findings)} findings from {len(passes)} passes -> {len(merged['findings'])} kept "
           f"({method} merge, min votes {min_votes}), ${merged['cost_usd']:.3f}")
@@ -523,7 +582,8 @@ def cmd_post(a):
                 out.write(json.dumps({"path": f["path"], "line": f["line"], "side": f["side"],
                                       "body": inline_body(f, -1), "status": "unanchored"}) + "\n")
         Path(a.dry_run).with_suffix(".summary.md").write_text(render_summary(
-            merged, [{**f, "url": "#"} for f in placed], unanchored, a.bot_name, a.footer, None, prior_counts))
+            merged, [{**f, "url": "#"} for f in placed], unanchored, a.bot_name, a.footer, None, prior_counts,
+            a.show_usage == "true"))
         print(f"dry run: {len(placed)} placed, {len(unanchored)} unanchored")
         return
 
@@ -535,7 +595,7 @@ def cmd_post(a):
     if previous and (m := re.search(r"Confidence: (\d+)/100", previous["body"])):
         previous_conf = int(m[1])
     body = render_summary(merged, posted, unanchored, a.bot_name, a.footer,
-                          previous_conf if prior else None, prior_counts)
+                          previous_conf if prior else None, prior_counts, a.show_usage == "true")
     if previous:
         gh_json("api", "-X", "PATCH", f"repos/{a.repo}/issues/comments/{previous['id']}", "--input", "-",
                 payload={"body": body})
@@ -555,7 +615,8 @@ def cmd_post(a):
     if step_summary:
         with open(step_summary, "a") as s:
             s.write(f"Review: {len(posted)} inline, {len(unanchored)} summary only, "
-                    f"{merged.get('passes', 1)} passes, ${merged.get('cost_usd', 0):.3f}\n")
+                    f"{merged.get('passes', 1)} passes, ${merged.get('cost_usd', 0):.3f}\n\n"
+                    + usage_table(merged))
 
 
 def post_inline(a, head, placed, unanchored):
@@ -637,6 +698,8 @@ def main():
     s.add_argument("--bot-name", default="Code Review Bot")
     s.add_argument("--footer", default="")
     s.add_argument("--trigger-comment-id", default="", help="comment that requested this review")
+    s.add_argument("--show-usage", default="true", choices=["true", "false"],
+                   help="add the estimated cost and token counts to the summary")
     s.add_argument("--ack-file", help="the eyes reaction to swap for +1 when the review is posted")
     s.add_argument("--dry-run", help="write placed findings here as JSONL instead of posting")
     a = p.parse_args()
