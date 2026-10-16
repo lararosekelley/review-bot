@@ -150,6 +150,10 @@ class Post(unittest.TestCase):
         self.assertIn("3 independent passes", text)
         self.assertTrue(text.rstrip().endswith("*advisory*"))
 
+    def test_no_findings_is_not_part_of_the_prior_bullet(self):
+        text = review.render_summary({**pass_output([]), "passes": 1}, [], [], "Bot", "", 52, {"fixed": 6})
+        self.assertIn("not verifiable.\n\nNo actionable findings.", text)
+
     def test_summary_without_findings(self):
         text = review.render_summary({**pass_output([]), "passes": 1}, [], [], "Bot", "", None, {})
         self.assertIn("No actionable findings.", text)

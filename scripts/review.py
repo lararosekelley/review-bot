@@ -201,6 +201,8 @@ def render_summary(merged, posted, unanchored, bot_name, footer, previous_confid
         out.append(f"- **{f['category']}** - {f['path']}:{f['line']}: {sanitize(f['title'], 300)} "
                    f"(not on a changed line, so not posted inline)\n\n  {sanitize(f['body'], 4000)}")
     if not posted and not unanchored:
+        if prior_counts:
+            out.append("")
         out.append("No actionable findings.")
     notes = merged["notes"]
     for key in ("coverage", "ci", "praise"):
