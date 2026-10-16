@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -227,6 +228,69 @@ class FailedPasses(unittest.TestCase):
         text = review.render_summary(merged, [], [], "Bot", "", None, {})
         self.assertIn("2 of 3 review passes failed", text)
         self.assertIn("vote threshold was lowered", text)
+
+
+def thread(tid, resolved=False, author="Bot", body=None, cid=1):
+    body = body if body is not None else "**[Bug]** Stale photo stays painted.\n\nwhy\n\n" + review.FINDING_MARKER + " n=0 -->"
+    return {"id": tid, "isResolved": resolved, "comments": {"nodes": [
+        {"databaseId": cid, "body": body, "path": "src/a.rs", "line": None, "originalLine": 11,
+         "author": {"__typename": author}}]}}
+
+
+class Prior(unittest.TestCase):
+    def test_only_open_bot_findings(self):
+        threads = [thread("T1", cid=1), thread("T2", resolved=True, cid=2), thread("T3", author="User", cid=3),
+                   thread("T4", body="**[Bug]** no marker", cid=4)]
+        prior = review.prior_from_threads(threads)
+        self.assertEqual(prior, [{"id": 1, "thread_id": "T1", "path": "src/a.rs", "line": 11,
+                                  "title": "Stale photo stays painted."}])
+
+
+class Rereview(unittest.TestCase):
+    def test_note(self):
+        note = review.rereview_note("abcdef123", {"fixed": 1}, 0, "https://s")
+        self.assertEqual(note, "Re-reviewed abcdef1: 1 fixed, 0 still open, 0 not verifiable; no new findings. "
+                               "[Summary](https://s)")
+        self.assertIn("2 new finding(s) listed in the summary", review.rereview_note("abc1234", {}, 2, "u"))
+
+    def test_react_swaps_the_eyes_reaction(self):
+        calls = []
+
+        def gh(*args, payload=None):
+            calls.append(("gh",) + args[1:3])
+            return ""
+
+        def gh_json(*args, payload=None):
+            calls.append(("json", args[2], payload["content"]))
+            return {"id": 77}
+
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(review, "gh", gh), \
+                mock.patch.object(review, "gh_json", gh_json):
+            ack = Path(d) / "ack.json"
+            review.react("o/r", 5, "eyes", str(ack))
+            self.assertTrue(ack.exists())
+            review.react("o/r", 5, "+1", str(ack))
+            self.assertFalse(ack.exists())
+        self.assertEqual(calls, [("json", "POST", "eyes"), ("gh", "-X", "DELETE"), ("json", "POST", "+1")])
+
+    def test_react_failure_does_not_raise(self):
+        def gh_json(*args, payload=None):
+            raise RuntimeError("forbidden")
+
+        with mock.patch.object(review, "gh_json", gh_json):
+            review.react("o/r", 5, "eyes", None)
+
+    def test_close_fixed_replies_and_resolves_only_fixed(self):
+        calls = []
+
+        def gh_json(*args, payload=None):
+            calls.append(args[1] if args[1] == "graphql" else payload["body"])
+            return {}
+
+        prior = [{"id": 1, "thread_id": "T1"}, {"id": 2, "thread_id": "T2"}]
+        with mock.patch.object(review, "gh_json", gh_json):
+            review.close_fixed(SimpleNamespace(repo="o/r", pr="5"), "abcdef123", prior, {1: "fixed", 2: "open"})
+        self.assertEqual(calls, ["Fixed as of abcdef1.", "graphql"])
 
 
 if __name__ == "__main__":

@@ -58,7 +58,9 @@ That's it! Opening a PR triggers a review; commenting `@bot review` on a PR runs
 another one; replying `@bot` to one of its inline comments starts a conversation on that thread.
 
 A re-review checks each earlier finding against the current code, reports it as fixed, still open,
-or not verifiable, and updates the same summary comment with the change in confidence.
+or not verifiable, and updates the same summary comment with the change in confidence. It reacts to
+the `@bot review` comment while it runs, replies to and resolves the thread of each fixed finding,
+and comments with a link to the summary when it has nothing new to post.
 
 ### Permissions
 

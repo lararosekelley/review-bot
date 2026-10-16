@@ -1,10 +1,12 @@
 """Run a structured review: find findings in parallel passes, merge them, post them.
 
+    review.py react --repo R --comment-id C --content eyes|+1|confused --ack-file ack.json
     review.py prior --repo R --pr N --out prior.json --prompt-out prior.md
     review.py find  --prompt-file P --passes N --model M [--effort E] --tools T --out-dir D
     review.py merge --in-dir D --min-votes K --merge-model M --out merged.json
     review.py post  --merged merged.json --prior prior.json --repo R --pr N
-                    --bot-name B [--footer F] [--dry-run findings.jsonl]
+                    --bot-name B [--footer F] [--trigger-comment-id C --ack-file ack.json]
+                    [--dry-run findings.jsonl]
 
 The model only returns data (prompts/findings.schema.json); this script is the
 only thing that writes to the pull request. Model text is untrusted: it is
@@ -244,19 +246,102 @@ def bot_comments(items, marker):
     return [c for c in items if c.get("user", {}).get("type") == "Bot" and marker in (c.get("body") or "")]
 
 
+THREADS_QUERY = """
+query($owner: String!, $name: String!, $pr: Int!, $after: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $pr) {
+      reviewThreads(first: 100, after: $after) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          isResolved
+          comments(first: 1) {
+            nodes { databaseId body path line originalLine author { __typename } }
+          }
+        }
+      }
+    }
+  }
+}"""
+
+
+def review_threads(repo, pr):
+    owner, name = repo.split("/")
+    threads, after = [], None
+    while True:
+        args = ["api", "graphql", "-f", f"query={THREADS_QUERY}", "-F", f"owner={owner}",
+                "-F", f"name={name}", "-F", f"pr={pr}"]
+        if after:
+            args += ["-f", f"after={after}"]
+        page = gh_json(*args)["data"]["repository"]["pullRequest"]["reviewThreads"]
+        threads += page["nodes"]
+        if not page["pageInfo"]["hasNextPage"]:
+            return threads
+        after = page["pageInfo"]["endCursor"]
+
+
+def prior_from_threads(threads):
+    """Earlier findings still open for discussion: unresolved threads the bot started."""
+    prior = []
+    for t in threads:
+        first = (t["comments"]["nodes"] or [None])[0]
+        if (t["isResolved"] or not first or first["author"]["__typename"] != "Bot"
+                or FINDING_MARKER not in first["body"]):
+            continue
+        title = re.sub(r"^\*\*\[[^\]]*\]\*\*\s*", "", (first["body"].splitlines() or [""])[0])
+        prior.append({"id": first["databaseId"], "thread_id": t["id"], "path": first["path"],
+                      "line": first["line"] or first["originalLine"], "title": title})
+    return prior
+
+
+def rereview_note(head, prior_counts, summary_only, summary_url):
+    """Comment for a re-review that posted no new review, so the requester is notified."""
+    parts = []
+    if prior_counts:
+        parts.append("{} fixed, {} still open, {} not verifiable".format(
+            prior_counts.get("fixed", 0), prior_counts.get("open", 0), prior_counts.get("not_verifiable", 0)))
+    parts.append(f"{summary_only} new finding(s) listed in the summary" if summary_only else "no new findings")
+    return f"Re-reviewed {head[:7]}: {'; '.join(parts)}. [Summary]({summary_url})"
+
+
+def react(repo, comment_id, content, ack_file):
+    """Swap the run's reaction on the triggering comment; never fails the run."""
+    base = f"repos/{repo}/issues/comments/{comment_id}/reactions"
+    try:
+        if ack_file and Path(ack_file).exists():
+            gh("api", "-X", "DELETE", f"{base}/{json.loads(Path(ack_file).read_text())['id']}")
+            Path(ack_file).unlink()
+        made = gh_json("api", "-X", "POST", base, "--input", "-", payload={"content": content})
+        if ack_file and content == "eyes":
+            Path(ack_file).write_text(json.dumps({"id": made["id"]}))
+    except (RuntimeError, KeyError, json.JSONDecodeError) as e:
+        print(f"could not react to comment {comment_id}: {e}")
+
+
+def close_fixed(a, head, prior, status):
+    """Reply on each fixed finding's thread and resolve it."""
+    for p in prior:
+        if status.get(p["id"]) != "fixed" or not p.get("thread_id"):
+            continue
+        try:
+            gh_json("api", "-X", "POST", f"repos/{a.repo}/pulls/{a.pr}/comments/{p['id']}/replies",
+                    "--input", "-", payload={"body": f"Fixed as of {head[:7]}."})
+            gh_json("api", "graphql", "-f",
+                    "query=mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { id } } }",
+                    "-f", f"id={p['thread_id']}")
+        except RuntimeError as e:
+            print(f"could not close the thread for finding {p['id']}: {e}")
+
+
 # Commands -------------------------------------------------------------------
 
 
+def cmd_react(a):
+    react(a.repo, a.comment_id, a.content, a.ack_file)
+
+
 def cmd_prior(a):
-    comments = bot_comments(gh_pages(f"repos/{a.repo}/pulls/{a.pr}/comments"), FINDING_MARKER)
-    prior = []
-    for c in comments:
-        if c.get("in_reply_to_id"):
-            continue
-        first = (c["body"].splitlines() or [""])[0]
-        title = re.sub(r"^\*\*\[[^\]]*\]\*\*\s*", "", first)
-        prior.append({"id": c["id"], "path": c["path"], "line": c.get("line") or c.get("original_line"),
-                      "title": title})
+    prior = prior_from_threads(review_threads(a.repo, a.pr))
     Path(a.out).write_text(json.dumps(prior, indent=2) + "\n")
     Path(a.prompt_out).write_text("".join(
         f"- id {p['id']}: {p['path']}:{p['line']}: {p['title']}\n" for p in prior))
@@ -408,10 +493,18 @@ def cmd_post(a):
     if previous:
         gh_json("api", "-X", "PATCH", f"repos/{a.repo}/issues/comments/{previous['id']}", "--input", "-",
                 payload={"body": body})
+        if not posted:
+            # An edited comment notifies no one, so say that the re-review ran.
+            gh_json("api", "-X", "POST", f"repos/{a.repo}/issues/{a.pr}/comments", "--input", "-",
+                    payload={"body": rereview_note(head, prior_counts, len(unanchored), previous["html_url"])})
     else:
         gh_json("api", "-X", "POST", f"repos/{a.repo}/issues/{a.pr}/comments", "--input", "-",
                 payload={"body": body})
-    print(f"posted {len(posted)} inline comments, {len(unanchored)} in the summary only")
+    close_fixed(a, head, prior, status)
+    if a.trigger_comment_id:
+        react(a.repo, a.trigger_comment_id, "+1", a.ack_file)
+    print(f"posted {len(posted)} inline comments, {len(unanchored)} in the summary only, "
+          f"closed {sum(status.get(p['id']) == 'fixed' for p in prior)} fixed finding(s)")
     step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if step_summary:
         with open(step_summary, "a") as s:
@@ -467,6 +560,11 @@ def post_inline(a, head, placed, unanchored):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
+    s = sub.add_parser("react")
+    s.add_argument("--repo", required=True)
+    s.add_argument("--comment-id", required=True)
+    s.add_argument("--content", required=True, choices=["eyes", "+1", "confused"])
+    s.add_argument("--ack-file", help="where the run's eyes reaction id is kept, so it can be swapped")
     s = sub.add_parser("prior")
     s.add_argument("--repo", required=True)
     s.add_argument("--pr", required=True)
@@ -492,9 +590,12 @@ def main():
     s.add_argument("--pr", required=True)
     s.add_argument("--bot-name", default="Code Review Bot")
     s.add_argument("--footer", default="")
+    s.add_argument("--trigger-comment-id", default="", help="comment that requested this review")
+    s.add_argument("--ack-file", help="the eyes reaction to swap for +1 when the review is posted")
     s.add_argument("--dry-run", help="write placed findings here as JSONL instead of posting")
     a = p.parse_args()
-    {"prior": cmd_prior, "find": cmd_find, "merge": cmd_merge, "post": cmd_post}[a.cmd](a)
+    {"react": cmd_react, "prior": cmd_prior, "find": cmd_find, "merge": cmd_merge,
+     "post": cmd_post}[a.cmd](a)
 
 
 if __name__ == "__main__":

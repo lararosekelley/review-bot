@@ -5,6 +5,16 @@ What changed in each version, for the people using the action. Each section is d
 publishes the section matching the tag as the GitHub release notes, so headings must stay
 `## X.Y.Z - YYYY-MM-DD`.
 
+## 1.2.1 - 2026-10-16
+
+### Fixed
+
+- A re-review requested with `@bot review` no longer looks like it did nothing. It reacts to the
+  request while it runs (a thumbs up when done, a confused face if it fails), replies to each fixed
+  finding's thread and resolves it, and comments with a link to the updated summary when it has no
+  new findings to post.
+- A finding whose thread is resolved is no longer carried into later re-reviews.
+
 ## 1.2.0 - 2026-10-16
 
 ### Added
