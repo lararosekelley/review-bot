@@ -15,6 +15,7 @@ findings.jsonl, summary.md, meta.json, transcript.jsonl, gh.jsonl.
 """
 
 import argparse
+import fcntl
 import json
 import os
 import shutil
@@ -53,6 +54,17 @@ def checkout(unit, src_root, work_root):
     dest = work_root / unit["repo"].replace("/", "__") / pr["head_sha"][:12]
     if (dest / ".replay-ready").exists():
         return dest
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    # Concurrent sweeps share checkouts; one builds each, the others wait for it.
+    with open(dest.parent / f".{dest.name}.lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if (dest / ".replay-ready").exists():
+            return dest
+        return build_checkout(unit, src_root, dest)
+
+
+def build_checkout(unit, src_root, dest):
+    pr = unit["pr"]
     if dest.exists():
         shutil.rmtree(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
