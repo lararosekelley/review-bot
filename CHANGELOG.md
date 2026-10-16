@@ -14,6 +14,9 @@ publishes the section matching the tag as the GitHub release notes, so headings 
   finding's thread and resolves it, and comments with a link to the updated summary when it has no
   new findings to post.
 - A finding whose thread is resolved is no longer carried into later re-reviews.
+- File paths and categories in the summary come from the model, so they are shown as plain code
+  text and cannot add formatting or links. The summary stays under GitHub's size limit on a review
+  with many findings.
 
 ## 1.2.0 - 2026-10-16
 

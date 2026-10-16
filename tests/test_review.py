@@ -146,7 +146,7 @@ class Post(unittest.TestCase):
         text = review.render_summary(merged, posted, [], "Bot", "advisory", 80, {"fixed": 1})
         self.assertTrue(text.startswith(review.SUMMARY_MARKER))
         self.assertIn("Confidence: 70/100 (-10 since the last review)", text)
-        self.assertIn("src/a.rs:11: t [(inline comment)](https://x/1)", text)
+        self.assertIn("`src/a.rs:11`: t [(inline comment)](https://x/1)", text)
         self.assertIn("1 fixed, 0 still open", text)
         self.assertIn("3 independent passes", text)
         self.assertTrue(text.rstrip().endswith("*advisory*"))
@@ -154,6 +154,21 @@ class Post(unittest.TestCase):
     def test_no_findings_is_not_part_of_the_prior_bullet(self):
         text = review.render_summary({**pass_output([]), "passes": 1}, [], [], "Bot", "", 52, {"fixed": 6})
         self.assertIn("not verifiable.\n\nNo actionable findings.", text)
+
+    def test_model_path_and_category_are_inert(self):
+        evil = finding(path="x.rs`\n## Injected [link](https://evil) review-bot:summary", category="<b>Bad</b>")
+        text = review.render_summary({**pass_output([]), "passes": 1}, [], [evil], "Bot", "", None, {})
+        self.assertNotIn("\n## Injected", text)
+        self.assertNotRegex(text, "(?i)review-bot:summary.*Injected")
+        self.assertIn("**Finding** - `x.rs ## Injected [link](https://evil) review-bot", text)
+        self.assertIn("**[Finding]**", review.inline_body(evil, 0))
+
+    def test_summary_stays_under_the_limit(self):
+        many = [finding(line=i, body="x" * 4000, title="t" * 300) for i in range(40)]
+        text = review.render_summary({**pass_output([]), "passes": 1}, [], many, "Bot", "", None, {})
+        self.assertLessEqual(len(text), review.SUMMARY_LIMIT + 40)
+        self.assertTrue(text.startswith(review.SUMMARY_MARKER))
+        self.assertNotIn("x" * 4000, text)
 
     def test_summary_without_findings(self):
         text = review.render_summary({**pass_output([]), "passes": 1}, [], [], "Bot", "", None, {})

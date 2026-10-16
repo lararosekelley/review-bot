@@ -99,6 +99,10 @@ def anchor(finding, valid, slack=ANCHOR_SLACK):
 
 
 SECRET_ENV = ("ANTHROPIC_API_KEY", "GH_TOKEN", "GITHUB_TOKEN")
+CATEGORIES = {"Bug", "Safety", "Security", "Architecture", "Escape Hatch", "Complexity",
+              "Error Handling", "Missing Coverage", "Surface Drift"}
+# GitHub rejects comments over 65,536 characters.
+SUMMARY_LIMIT = 60000
 SUGGESTION = re.compile(r"```suggestion\n.*?```\n?", re.S)
 
 
@@ -181,13 +185,37 @@ def drop_reported(findings, prior_comments, prior_status):
         for c in still_open)]
 
 
+def category(f):
+    return f["category"] if f.get("category") in CATEGORIES else "Finding"
+
+
+def location(f, line):
+    """A model-supplied path as inert code text, so it cannot add Markdown or markers."""
+    path = sanitize(f["path"], 300).replace("`", "").replace("\n", " ")
+    return f"`{path}:{line}`"
+
+
 def inline_body(f, n):
     title = sanitize(f["title"], 300).replace("\n", " ")
     body = sanitize(f["body"], 20000)
-    return f"**[{f['category']}]** {title}\n\n{body}\n\n{FINDING_MARKER} n={n} -->"
+    return f"**[{category(f)}]** {title}\n\n{body}\n\n{FINDING_MARKER} n={n} -->"
 
 
 def render_summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts):
+    """The summary comment, kept under GitHub's size limit.
+
+    If it is too long, the bodies of findings that could not be placed are left
+    out first, then the text is cut.
+    """
+    text = _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, True)
+    if len(text) > SUMMARY_LIMIT:
+        text = _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, False)
+    if len(text) > SUMMARY_LIMIT:
+        text = text[:SUMMARY_LIMIT].rstrip() + "\n\n*Summary truncated.*\n"
+    return text
+
+
+def _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, prior_counts, bodies):
     conf = merged["confidence"]
     head = f"## {sanitize(bot_name, 100)} - Confidence: {conf}/100"
     if previous_confidence is not None:
@@ -197,11 +225,12 @@ def render_summary(merged, posted, unanchored, bot_name, footer, previous_confid
         out.append("- Prior findings: {} fixed, {} still open, {} not verifiable.".format(
             prior_counts.get("fixed", 0), prior_counts.get("open", 0), prior_counts.get("not_verifiable", 0)))
     for f in posted:
-        out.append(f"- **{f['category']}** - {f['path']}:{f['posted_line']}: "
+        out.append(f"- **{category(f)}** - {location(f, f['posted_line'])}: "
                    f"{sanitize(f['title'], 300)} [(inline comment)]({f['url']})")
     for f in unanchored:
-        out.append(f"- **{f['category']}** - {f['path']}:{f['line']}: {sanitize(f['title'], 300)} "
-                   f"(not on a changed line, so not posted inline)\n\n  {sanitize(f['body'], 4000)}")
+        out.append(f"- **{category(f)}** - {location(f, f['line'])}: {sanitize(f['title'], 300)} "
+                   "(not on a changed line, so not posted inline)"
+                   + (f"\n\n  {sanitize(f['body'], 4000)}" if bodies else ""))
     if not posted and not unanchored:
         if prior_counts:
             out.append("")
