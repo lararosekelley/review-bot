@@ -163,6 +163,14 @@ class Post(unittest.TestCase):
         self.assertIn("**Finding** - `x.rs ## Injected [link](https://evil) review-bot", text)
         self.assertIn("**[Finding]**", review.inline_body(evil, 0))
 
+    def test_carriage_returns_cannot_break_lines(self):
+        evil = finding(path="x.rs\r\r## Injected", title="t\r\r# Title")
+        merged = {**pass_output([], summary="s\r\r# Head"), "passes": 1}
+        text = review.render_summary(merged, [], [evil], "Bot", "", None, {})
+        self.assertNotIn("\r", text)
+        self.assertNotRegex(text, "(?m)^#+ (Injected|Title|Head)")
+        self.assertNotIn("\r", review.inline_body(evil, 0).split("\n")[0])
+
     def test_summary_stays_under_the_limit(self):
         many = [finding(line=i, body="x" * 4000, title="t" * 300) for i in range(40)]
         text = review.render_summary({**pass_output([]), "passes": 1}, [], many, "Bot", "", None, {})

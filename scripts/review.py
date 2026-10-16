@@ -185,18 +185,23 @@ def drop_reported(findings, prior_comments, prior_status):
         for c in still_open)]
 
 
+def one_line(text, limit):
+    """Model text meant for one line, with every line break (including a bare CR) collapsed."""
+    return " ".join(sanitize(text, limit).split())
+
+
 def category(f):
     return f["category"] if f.get("category") in CATEGORIES else "Finding"
 
 
 def location(f, line):
     """A model-supplied path as inert code text, so it cannot add Markdown or markers."""
-    path = sanitize(f["path"], 300).replace("`", "").replace("\n", " ")
+    path = one_line(f["path"], 300).replace("`", "")
     return f"`{path}:{line}`"
 
 
 def inline_body(f, n):
-    title = sanitize(f["title"], 300).replace("\n", " ")
+    title = one_line(f["title"], 300)
     body = sanitize(f["body"], 20000)
     return f"**[{category(f)}]** {title}\n\n{body}\n\n{FINDING_MARKER} n={n} -->"
 
@@ -220,15 +225,15 @@ def _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, 
     head = f"## {sanitize(bot_name, 100)} - Confidence: {conf}/100"
     if previous_confidence is not None:
         head += f" ({conf - previous_confidence:+d} since the last review)"
-    out = [SUMMARY_MARKER, head, "", f"**{sanitize(merged['summary'], 500)}**", ""]
+    out = [SUMMARY_MARKER, head, "", f"**{one_line(merged['summary'], 500)}**", ""]
     if prior_counts:
         out.append("- Prior findings: {} fixed, {} still open, {} not verifiable.".format(
             prior_counts.get("fixed", 0), prior_counts.get("open", 0), prior_counts.get("not_verifiable", 0)))
     for f in posted:
         out.append(f"- **{category(f)}** - {location(f, f['posted_line'])}: "
-                   f"{sanitize(f['title'], 300)} [(inline comment)]({f['url']})")
+                   f"{one_line(f['title'], 300)} [(inline comment)]({f['url']})")
     for f in unanchored:
-        out.append(f"- **{category(f)}** - {location(f, f['line'])}: {sanitize(f['title'], 300)} "
+        out.append(f"- **{category(f)}** - {location(f, f['line'])}: {one_line(f['title'], 300)} "
                    "(not on a changed line, so not posted inline)"
                    + (f"\n\n  {sanitize(f['body'], 4000)}" if bodies else ""))
     if not posted and not unanchored:
