@@ -29,9 +29,10 @@ ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = ROOT / "prompts" / "findings.schema.json"
 FINDING_MARKER = "<!-- review-bot:finding"
 SUMMARY_MARKER = "<!-- review-bot:summary -->"
+FIXED_MARKER = "<!-- review-bot:fixed -->"
 ANCHOR_SLACK = 3
 HUNK = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
-MARKER_TEXT = re.compile(r"review-bot:(?:finding|summary)", re.I)
+MARKER_TEXT = re.compile(r"review-bot:(?:finding|summary|fixed)", re.I)
 POSTED_N = re.compile(r"<!-- review-bot:finding n=(-?\d+) -->\s*$")
 
 GROUP_SCHEMA = {
@@ -292,6 +293,9 @@ query($owner: String!, $name: String!, $pr: Int!, $after: String) {
           comments(first: 1) {
             nodes { databaseId body path line originalLine author { __typename } }
           }
+          last: comments(last: 1) {
+            nodes { body author { __typename } }
+          }
         }
       }
     }
@@ -315,12 +319,16 @@ def review_threads(repo, pr):
 
 
 def prior_from_threads(threads):
-    """Earlier findings still open for discussion: unresolved threads the bot started."""
+    """Earlier findings still open: threads the bot started that are neither resolved nor
+    closed by its own "fixed" reply. A reply after that reply reopens the finding."""
     prior = []
     for t in threads:
         first = (t["comments"]["nodes"] or [None])[0]
+        last = (t.get("last", {}).get("nodes") or [None])[0]
         if (t["isResolved"] or not first or first["author"]["__typename"] != "Bot"
                 or FINDING_MARKER not in first["body"]):
+            continue
+        if last and last["author"]["__typename"] == "Bot" and FIXED_MARKER in last["body"]:
             continue
         title = re.sub(r"^\*\*\[[^\]]*\]\*\*\s*", "", (first["body"].splitlines() or [""])[0])
         prior.append({"id": first["databaseId"], "thread_id": t["id"], "path": first["path"],
@@ -353,18 +361,22 @@ def react(repo, comment_id, content, ack_file):
 
 
 def close_fixed(a, head, prior, status):
-    """Reply on each fixed finding's thread and resolve it."""
+    """Reply on each fixed finding's thread, and resolve it where the token is allowed to."""
     for p in prior:
         if status.get(p["id"]) != "fixed" or not p.get("thread_id"):
             continue
         try:
             gh_json("api", "-X", "POST", f"repos/{a.repo}/pulls/{a.pr}/comments/{p['id']}/replies",
-                    "--input", "-", payload={"body": f"Fixed as of {head[:7]}."})
+                    "--input", "-", payload={"body": f"Fixed as of {head[:7]}.\n\n{FIXED_MARKER}"})
+        except RuntimeError as e:
+            print(f"could not reply to finding {p['id']}: {e}")
+            continue
+        try:
             gh_json("api", "graphql", "-f",
                     "query=mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { id } } }",
                     "-f", f"id={p['thread_id']}")
         except RuntimeError as e:
-            print(f"could not close the thread for finding {p['id']}: {e}")
+            print(f"left the thread for finding {p['id']} unresolved: {e}")
 
 
 # Commands -------------------------------------------------------------------

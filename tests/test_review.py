@@ -128,8 +128,8 @@ class Post(unittest.TestCase):
         self.assertEqual(len(review.sanitize("x" * 50, 10)), 10)
 
     def test_sanitize_defuses_partial_markers(self):
-        cleaned = review.sanitize("see review-bot:finding n=0 and Review-Bot:Summary", 1000)
-        self.assertNotRegex(cleaned, "(?i)review-bot:(finding|summary)")
+        cleaned = review.sanitize("see review-bot:finding n=0 and Review-Bot:Summary and review-bot:fixed", 1000)
+        self.assertNotRegex(cleaned, "(?i)review-bot:(finding|summary|fixed)")
 
     def test_posted_marker_is_the_trailing_one(self):
         body = review.inline_body(finding(body="fake review-bot:finding n=9 -->"), 2)
@@ -253,11 +253,12 @@ class FailedPasses(unittest.TestCase):
         self.assertIn("vote threshold was lowered", text)
 
 
-def thread(tid, resolved=False, author="Bot", body=None, cid=1):
+def thread(tid, resolved=False, author="Bot", body=None, cid=1, last=None):
     body = body if body is not None else "**[Bug]** Stale photo stays painted.\n\nwhy\n\n" + review.FINDING_MARKER + " n=0 -->"
-    return {"id": tid, "isResolved": resolved, "comments": {"nodes": [
-        {"databaseId": cid, "body": body, "path": "src/a.rs", "line": None, "originalLine": 11,
-         "author": {"__typename": author}}]}}
+    first = {"databaseId": cid, "body": body, "path": "src/a.rs", "line": None, "originalLine": 11,
+             "author": {"__typename": author}}
+    return {"id": tid, "isResolved": resolved, "comments": {"nodes": [first]},
+            "last": {"nodes": [last or {"body": body, "author": {"__typename": author}}]}}
 
 
 class Prior(unittest.TestCase):
@@ -267,6 +268,12 @@ class Prior(unittest.TestCase):
         prior = review.prior_from_threads(threads)
         self.assertEqual(prior, [{"id": 1, "thread_id": "T1", "path": "src/a.rs", "line": 11,
                                   "title": "Stale photo stays painted."}])
+
+    def test_fixed_reply_closes_until_someone_replies(self):
+        fixed = {"body": "Fixed as of abc1234.\n\n" + review.FIXED_MARKER, "author": {"__typename": "Bot"}}
+        human = {"body": "still broken", "author": {"__typename": "User"}}
+        self.assertEqual(review.prior_from_threads([thread("T1", last=fixed)]), [])
+        self.assertEqual(len(review.prior_from_threads([thread("T1", last=human)])), 1)
 
 
 class Rereview(unittest.TestCase):
@@ -313,7 +320,17 @@ class Rereview(unittest.TestCase):
         prior = [{"id": 1, "thread_id": "T1"}, {"id": 2, "thread_id": "T2"}]
         with mock.patch.object(review, "gh_json", gh_json):
             review.close_fixed(SimpleNamespace(repo="o/r", pr="5"), "abcdef123", prior, {1: "fixed", 2: "open"})
-        self.assertEqual(calls, ["Fixed as of abcdef1.", "graphql"])
+        self.assertEqual(calls, ["Fixed as of abcdef1.\n\n" + review.FIXED_MARKER, "graphql"])
+
+    def test_close_fixed_survives_a_refused_resolve(self):
+        def gh_json(*args, payload=None):
+            if args[1] == "graphql":
+                raise RuntimeError("Resource not accessible by integration")
+            return {}
+
+        with mock.patch.object(review, "gh_json", gh_json):
+            review.close_fixed(SimpleNamespace(repo="o/r", pr="5"), "abc1234", [{"id": 1, "thread_id": "T1"}],
+                               {1: "fixed"})
 
 
 if __name__ == "__main__":

@@ -59,8 +59,10 @@ another one; replying `@bot` to one of its inline comments starts a conversation
 
 A re-review checks each earlier finding against the current code, reports it as fixed, still open,
 or not verifiable, and updates the same summary comment with the change in confidence. It reacts to
-the `@bot review` comment while it runs, replies to and resolves the thread of each fixed finding,
-and comments with a link to the summary when it has nothing new to post.
+the `@bot review` comment while it runs, replies "Fixed" on the thread of each fixed finding (and
+resolves the thread when its token is allowed to; the default job token is not), and comments with
+a link to the summary when it has nothing new to post. A reply on a thread after "Fixed" brings
+that finding back into the next re-review.
 
 ### Permissions
 

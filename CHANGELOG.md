@@ -10,10 +10,12 @@ publishes the section matching the tag as the GitHub release notes, so headings 
 ### Fixed
 
 - A re-review requested with `@bot review` no longer looks like it did nothing. It reacts to the
-  request while it runs (a thumbs up when done, a confused face if it fails), replies to each fixed
-  finding's thread and resolves it, and comments with a link to the updated summary when it has no
-  new findings to post.
-- A finding whose thread is resolved is no longer carried into later re-reviews.
+  request while it runs (a thumbs up when done, a confused face if it fails), replies "Fixed" on each
+  fixed finding's thread, and comments with a link to the updated summary when it has no new
+  findings to post. It also resolves those threads when its token is allowed to; the default job
+  token is not.
+- A finding that was resolved, or answered "Fixed" by the bot, is no longer carried into later
+  re-reviews. Replying on the thread after "Fixed" brings it back.
 - File paths and categories in the summary come from the model, so they are shown as plain code
   text and cannot add formatting or links. The summary stays under GitHub's size limit on a review
   with many findings.
