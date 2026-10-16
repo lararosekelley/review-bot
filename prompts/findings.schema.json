@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "confidence", "findings", "prior", "notes"],
+  "properties": {
+    "summary": { "type": "string" },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "line", "start_line", "side", "category", "title", "body"],
+        "properties": {
+          "path": { "type": "string" },
+          "line": { "type": "integer", "minimum": 1 },
+          "start_line": { "type": "integer", "minimum": 0 },
+          "side": { "enum": ["RIGHT", "LEFT"] },
+          "category": {
+            "enum": [
+              "Bug",
+              "Safety",
+              "Security",
+              "Architecture",
+              "Escape Hatch",
+              "Complexity",
+              "Error Handling",
+              "Missing Coverage",
+              "Surface Drift"
+            ]
+          },
+          "title": { "type": "string" },
+          "body": { "type": "string" }
+        }
+      }
+    },
+    "prior": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "integer" },
+          "status": { "enum": ["fixed", "open", "not_verifiable"] }
+        }
+      }
+    },
+    "notes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coverage", "ci", "praise"],
+      "properties": {
+        "coverage": { "type": "string" },
+        "ci": { "type": "string" },
+        "praise": { "type": "string" }
+      }
+    }
+  }
+}

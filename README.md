@@ -68,18 +68,21 @@ with:
 
 ## Configure
 
-| Input                  | Default             | What it does                                                                                                      |
-| ---------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `model`                | `claude-sonnet-5-5` | Any current model id. `claude-opus-5-5` is more thorough and costs more per PR.                                   |
-| `effort`               | `high`              | `low`, `medium`, `high`, `xhigh`, or `""` to leave it unset. `xhigh` is the most thorough and the most expensive. |
-| `bot-name`             | `Code Review Bot`   | The name it signs the summary with.                                                                               |
-| `repo-notes-file`      | –                   | Path to your repo-specific notes, e.g. `.github/review-bot/REPO_NOTES.md`.                                        |
-| `repo-notes`           | –                   | The same thing inline, for a few lines you do not want in a file.                                                 |
-| `trigger-phrase`       | `@bot`              | What re-invokes it from a comment.                                                                                |
-| `allowed-associations` | `OWNER`             | Comma-separated author associations allowed to trigger it. No spaces.                                             |
-| `timeout-minutes`      | `20`                | Job timeout.                                                                                                      |
-| `footer`               | advisory notice     | Line appended to the summary. Set to `""` to omit.                                                                |
-| `extra-allowed-tools`  | –                   | Extra tools appended to the allowlist.                                                                            |
+| Input                  | Default                     | What it does                                                                                                                    |
+| ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                | `claude-sonnet-5-5`         | Any current model id. `claude-opus-5-5` is more thorough and costs more per PR.                                                 |
+| `effort`               | `high`                      | `low`, `medium`, `high`, `xhigh`, or `""` to leave it unset. `xhigh` is the most thorough and the most expensive.               |
+| `passes`               | `1`                         | Independent review passes, run in parallel. With more than one, only findings raised by at least `min-votes` passes are posted. |
+| `min-votes`            | auto                        | Passes that must raise a finding. Defaults to 1 for a single pass, 2 otherwise.                                                 |
+| `merge-model`          | `claude-haiku-4-5-20251001` | Model that groups duplicate findings across passes.                                                                             |
+| `bot-name`             | `Code Review Bot`           | The name it signs the summary with.                                                                                             |
+| `repo-notes-file`      | –                           | Path to your repo-specific notes, e.g. `.github/review-bot/REPO_NOTES.md`.                                                      |
+| `repo-notes`           | –                           | The same thing inline, for a few lines you do not want in a file.                                                               |
+| `trigger-phrase`       | `@bot`                      | A comment with this phrase plus `review` runs a re-review; other mentions get a reply.                                          |
+| `allowed-associations` | `OWNER`                     | Comma-separated author associations allowed to trigger it. No spaces.                                                           |
+| `timeout-minutes`      | `20`                        | Job timeout.                                                                                                                    |
+| `footer`               | advisory notice             | Line appended to the summary. Set to `""` to omit.                                                                              |
+| `extra-allowed-tools`  | –                           | Extra tools appended to the allowlist.                                                                                          |
 
 Need custom triggers - branch filters, a different event set, extra steps in the job? Skip the
 reusable workflow and call the action directly. See [`examples/action.yml`](examples/action.yml).
@@ -104,20 +107,24 @@ examples: a [Rust CLI](examples/REPO_NOTES-rust-cli.md) and a
 
 [`prompts/BASE_PROMPT.md`](prompts/BASE_PROMPT.md) is the review agent's complete instructions. The
 action assembles the final prompt from it, your notes, and the PR context, then hands it to
-[`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action) with a read-only
-tool allowlist plus the inline-comment tool.
+`claude -p` with a read-only tool allowlist and a JSON schema. The model returns its findings as data
+and never writes to the PR: [`scripts/review.py`](scripts/review.py) places each finding on the diff,
+posts them as one review, and keeps one summary comment per PR up to date. With `passes` above 1,
+the passes run in parallel and a merge step groups duplicates and drops findings too few passes
+raised. Replies to comments go through
+[`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action).
 
 The agent's first step is orientation: it reads `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` and
 your `.github/workflows/` to learn what CI checks, because **whatever CI checks, it never mentions**.
 Then it gathers the diff and check results, gates on requirements, checks for existing patterns,
-traces data flow, applies a strict kill filter, and posts what survives.
+traces data flow, applies a strict kill filter, and reports what survives.
 
 Everything it can find is worth a comment only if you would ask for a change. That single rule is
 what keeps the reviews readable.
 
 ## Costs and limits
 
-- Every review is one API call chain against **your** key. `claude-opus-5-5` at `xhigh` on a large
+- Every review is one API call chain per pass against **your** key. `claude-opus-5-5` at `xhigh` on a large
   diff is the expensive option; `claude-sonnet-5-5` with `effort: ""` is the cheap one.
 - The default gating exists because a review costs money. Widen `allowed-associations`
   deliberately.
@@ -146,7 +153,8 @@ does. actionlint lints **workflows** - and, with shellcheck present, the shell i
 blocks. It does not lint action *metadata*: hand it `action.yml` and it emits nonsense about a
 missing `jobs:` section, so the globs in `lint:actions` exclude it deliberately. That would leave
 the action's own shell unchecked, so it is not inline in `action.yml` at all - it lives in
-[`scripts/assemble-prompt.sh`](scripts/assemble-prompt.sh), where shellcheck lints it directly.
+[`scripts/`](scripts/), where shellcheck lints it directly. `npm test` runs the unit tests for
+`scripts/review.py`.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org) with a required scope
 drawn from [`commitlint.config.cjs`](commitlint.config.cjs) - `prompt`, `action`, `workflow`,

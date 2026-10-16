@@ -70,3 +70,12 @@ jobs:
       # shell it runs. That shell lives in scripts/ for exactly this reason.
       - name: Lint shell
         run: npm run lint:sh
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run unit tests
+        run: python3 -I -m unittest discover -s tests -v

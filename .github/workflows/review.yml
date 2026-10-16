@@ -18,6 +18,21 @@ on:
         type: string
         required: false
         default: "high"
+      passes:
+        description: "Independent review passes run in parallel; see the action's passes input."
+        type: number
+        required: false
+        default: 1
+      min-votes:
+        description: "Passes that must raise a finding for it to be posted. 0 for 1 with a single pass, 2 otherwise."
+        type: number
+        required: false
+        default: 0
+      merge-model:
+        description: "Model that groups duplicate findings across passes."
+        type: string
+        required: false
+        default: "claude-haiku-4-5-20251001"
       bot-name:
         type: string
         required: false
@@ -91,7 +106,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # A comment event carries no PR head, so check out the PR's head ref.
+          ref: ${{ github.event.pull_request.head.sha || (github.event.issue.pull_request && format('refs/pull/{0}/head', github.event.issue.number)) || github.sha }}
 
       # Pinned to the same moving major tag this workflow is released under, so
       # a caller on @v1 always gets a matching pair. Calling this workflow at
@@ -102,6 +118,10 @@ jobs:
           anthropic-api-key: ${{ secrets.anthropic-api-key }}
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
+          passes: ${{ inputs.passes }}
+          min-votes: ${{ inputs.min-votes > 0 && inputs.min-votes || '' }}
+          merge-model: ${{ inputs.merge-model }}
+          trigger-phrase: ${{ inputs.trigger-phrase }}
           bot-name: ${{ inputs.bot-name }}
           repo-notes: ${{ inputs.repo-notes }}
           repo-notes-file: ${{ inputs.repo-notes-file }}

@@ -7,7 +7,8 @@
     "lint:md": "markdownlint-cli2",
     "lint:actions": "actionlint .github/workflows/*.yml examples/*.yml",
     "lint:sh": "shellcheck scripts/*.sh .husky/commit-msg .husky/pre-commit",
-    "release": "scripts/release.sh"
+    "release": "scripts/release.sh",
+    "test": "python3 -I -m unittest discover -s tests"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.0",

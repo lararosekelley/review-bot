@@ -38,12 +38,32 @@ inputs:
     description: "Additional tools to allow, appended to the default set. Comma-separated, no surrounding quotes."
     required: false
     default: ""
+  passes:
+    description: "Independent review passes run in parallel. With more than one, findings raised by fewer than min-votes passes are dropped."
+    required: false
+    default: "1"
+  min-votes:
+    description: "Passes that must raise a finding for it to be posted. Empty for 1 with a single pass, 2 otherwise."
+    required: false
+    default: ""
+  merge-model:
+    description: "Model that groups duplicate findings across passes."
+    required: false
+    default: "claude-haiku-4-5-20251001"
+  trigger-phrase:
+    description: "A PR comment containing this phrase followed by \"review\" runs a full re-review; other comments get a reply."
+    required: false
+    default: "@bot"
+  claude-code-version:
+    description: "Claude Code CLI version the review passes run."
+    required: false
+    default: "2.1.301"
   sticky-comment:
-    description: "Reuse one comment per PR instead of adding a new one each run."
+    description: "Replies to comments: reuse one comment per PR instead of adding a new one each run."
     required: false
     default: "true"
   include-fix-links:
-    description: "Add a one-click fix link to each inline finding."
+    description: "Replies to comments: add a one-click fix link to inline comments."
     required: false
     default: "true"
   footer:
@@ -54,13 +74,104 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # The prompt is assembled by a script rather than an inline `run:` block so
+    # The shell for every step lives in scripts/ rather than inline, so
     # shellcheck can lint it: actionlint checks the shell in workflow `run:`
     # blocks, but action metadata is not a workflow, so anything inline here
-    # would go unchecked. See scripts/assemble-prompt.sh.
-    - id: assemble
+    # would go unchecked.
+    - id: mode
       shell: bash
       env:
+        EVENT: ${{ github.event_name }}
+        TRIGGER: ${{ inputs.trigger-phrase }}
+        COMMENT_BODY: ${{ github.event.comment.body || '' }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/mode.sh"
+
+    # Full review: parallel passes return findings as data, and the post step
+    # is the only thing that writes to the pull request.
+    - name: Set up review
+      if: steps.mode.outputs.mode == 'review'
+      shell: bash
+      env:
+        CLAUDE_CODE_VERSION: ${{ inputs.claude-code-version }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+      run: bash "$GITHUB_ACTION_PATH/scripts/setup-review.sh"
+
+    - name: Load prior findings
+      if: steps.mode.outputs.mode == 'review'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" prior --repo "$GITHUB_REPOSITORY" --pr "$PR_NUMBER"
+        --out "$WORK_DIR/prior.json" --prompt-out "$WORK_DIR/prior.md"
+
+    - id: assemble-review
+      if: steps.mode.outputs.mode == 'review'
+      shell: bash
+      env:
+        MODE: review
+        BOT_NAME: ${{ inputs.bot-name }}
+        REPO_NOTES: ${{ inputs.repo-notes }}
+        REPO_NOTES_FILE: ${{ inputs.repo-notes-file }}
+        MODEL: ${{ inputs.model }}
+        EFFORT: ${{ inputs.effort }}
+        EXTRA_TOOLS: ${{ inputs.extra-allowed-tools }}
+        PRIOR_FILE: ${{ runner.temp }}/review-bot/prior.md
+        PROMPT_FILE: ${{ runner.temp }}/review-bot/prompt.md
+        PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        PR_TITLE: ${{ github.event.pull_request.title || github.event.issue.title || '' }}
+        PR_DRAFT: ${{ github.event.pull_request.draft || false }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/assemble-prompt.sh"
+
+    - name: Review
+      if: steps.mode.outputs.mode == 'review'
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        PASSES: ${{ inputs.passes }}
+        MODEL: ${{ inputs.model }}
+        EFFORT: ${{ inputs.effort }}
+        TOOLS: ${{ steps.assemble-review.outputs.tools }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" find --prompt-file "$WORK_DIR/prompt.md"
+        --passes "$PASSES" --model "$MODEL" --effort "$EFFORT" --tools "$TOOLS" --out-dir "$WORK_DIR/passes"
+
+    - name: Merge findings
+      if: steps.mode.outputs.mode == 'review'
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        MIN_VOTES: ${{ inputs.min-votes || '0' }}
+        MERGE_MODEL: ${{ inputs.merge-model }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" merge --in-dir "$WORK_DIR/passes"
+        --min-votes "$MIN_VOTES" --merge-model "$MERGE_MODEL" --out "$WORK_DIR/merged.json"
+
+    - name: Post review
+      if: steps.mode.outputs.mode == 'review'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        BOT_NAME: ${{ inputs.bot-name }}
+        FOOTER: ${{ inputs.footer }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" post --merged "$WORK_DIR/merged.json"
+        --prior "$WORK_DIR/prior.json" --repo "$GITHUB_REPOSITORY" --pr "$PR_NUMBER"
+        --bot-name "$BOT_NAME" --footer "$FOOTER"
+
+    # Replies to comments stay conversational, through claude-code-action.
+    - id: assemble-conversation
+      if: steps.mode.outputs.mode == 'conversation'
+      shell: bash
+      env:
+        MODE: conversation
         BOT_NAME: ${{ inputs.bot-name }}
         REPO_NOTES: ${{ inputs.repo-notes }}
         REPO_NOTES_FILE: ${{ inputs.repo-notes-file }}
@@ -69,18 +180,18 @@ runs:
         EFFORT: ${{ inputs.effort }}
         EXTRA_TOOLS: ${{ inputs.extra-allowed-tools }}
         PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
-        PR_TITLE: ${{ github.event.pull_request.title || '' }}
+        PR_TITLE: ${{ github.event.pull_request.title || github.event.issue.title || '' }}
         PR_DRAFT: ${{ github.event.pull_request.draft || false }}
       run: bash "$GITHUB_ACTION_PATH/scripts/assemble-prompt.sh"
 
-    - name: Review
+    - name: Reply
+      if: steps.mode.outputs.mode == 'conversation'
       uses: anthropics/claude-code-action@v1.0.217
       with:
         anthropic_api_key: ${{ inputs.anthropic-api-key }}
         github_token: ${{ inputs.github-token }}
         use_sticky_comment: ${{ inputs.sticky-comment }}
         include_fix_links: ${{ inputs.include-fix-links }}
-        track_progress: "true"
         classify_inline_comments: "true"
-        prompt: ${{ steps.assemble.outputs.prompt }}
-        claude_args: ${{ steps.assemble.outputs.claude-args }}
+        prompt: ${{ steps.assemble-conversation.outputs.prompt }}
+        claude_args: ${{ steps.assemble-conversation.outputs.claude-args }}
