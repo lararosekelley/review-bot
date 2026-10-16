@@ -5,6 +5,37 @@ What changed in each version, for the people using the action. Each section is d
 publishes the section matching the tag as the GitHub release notes, so headings must stay
 `## X.Y.Z - YYYY-MM-DD`.
 
+## 1.2.0 - 2026-10-16
+
+### Added
+
+- `passes` runs several independent reviews of a PR in parallel and posts only the findings that at
+  least `min-votes` of them raised. It trims nitpicks at the cost of one review per pass. The
+  default stays one pass. `merge-model` sets the model that groups duplicate findings.
+- `claude-code-version` pins the Claude Code CLI the review runs.
+- A re-review (`@bot review`) checks each earlier finding against the current code, reports it as
+  fixed, still open, or not verifiable, and updates the summary comment with the change in
+  confidence instead of posting a new one.
+
+### Changed
+
+- The model returns its findings as data and the action posts them: one review holding every inline
+  comment, plus one summary comment per PR that later reviews update. Links in the summary point at
+  the inline comments. A finding that cannot be placed on a changed line is listed in the summary
+  rather than lost.
+- Reviews run the Claude Code CLI directly; replies to comments still go through
+  claude-code-action. Review comments no longer carry "Fix this" links, and there is no progress
+  checklist while a review runs.
+- The first review after upgrading posts a new summary comment. A summary left by an earlier version
+  stays where it is.
+- Text the bot posts has the API key and token values redacted.
+
+### Fixed
+
+- A comment on a PR from another repository no longer checks out that repository's code next to the
+  API key; the review reads your base branch instead. On a PR from the same repository, a
+  comment-triggered review now reads the PR's code rather than the default branch.
+
 ## 1.1.1 - 2026-10-14
 
 ### Changed

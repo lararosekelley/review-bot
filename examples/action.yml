@@ -60,7 +60,7 @@ jobs:
       - uses: lararosekelley/review-bot@v1
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: claude-sonnet-5
-          effort: ""
+          # The thorough option: finds more, costs about three times the default.
+          model: claude-opus-5-5
           bot-name: "The Enforcer"
           repo-notes-file: .github/review-bot/REPO_NOTES.md

@@ -57,6 +57,9 @@ The `permissions` block is required.
 That's it! Opening a PR triggers a review; commenting `@bot review` on a PR runs
 another one; replying `@bot` to one of its inline comments starts a conversation on that thread.
 
+A re-review checks each earlier finding against the current code, reports it as fixed, still open,
+or not verifiable, and updates the same summary comment with the change in confidence.
+
 ### Permissions
 
 By default, only the **repo owner** can spend the API key. On a shared or org repo, widen it:
@@ -90,8 +93,8 @@ reusable workflow and call the action directly. See [`examples/action.yml`](exam
 
 ## Repo notes
 
-The base prompt carries the philosophy, the finding categories, the review workflow, the scoring,
-and the output format. Your notes carry only what it cannot safely infer in one pass:
+The prompts carry the philosophy, the finding categories, the review workflow, the scoring, and the
+output format. Your notes carry only what they cannot safely infer in one pass:
 
 - **The stack**, especially where it would guess wrong
 - **What CI already covers**, so it never duplicates it
@@ -106,14 +109,16 @@ examples: a [Rust CLI](examples/REPO_NOTES-rust-cli.md) and a
 
 ## How it works
 
-[`prompts/BASE_PROMPT.md`](prompts/BASE_PROMPT.md) is the review agent's complete instructions. The
-action assembles the final prompt from it, your notes, and the PR context, then hands it to
-`claude -p` with a read-only tool allowlist and a JSON schema. The model returns its findings as data
+[`prompts/BASE_PROMPT.md`](prompts/BASE_PROMPT.md) holds the review agent's rules and workflow, and
+[`prompts/OUTPUT_REVIEW.md`](prompts/OUTPUT_REVIEW.md) says what a review returns. The action
+assembles the final prompt from them, your notes, earlier findings on the PR, and the PR context,
+then hands it to `claude -p` with a read-only tool allowlist and a JSON schema. The model returns its findings as data
 and never writes to the PR: [`scripts/review.py`](scripts/review.py) places each finding on the diff,
 posts them as one review, and keeps one summary comment per PR up to date. With `passes` above 1,
 the passes run in parallel and a merge step groups duplicates and drops findings too few passes
-raised. Replies to comments go through
-[`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action).
+raised. A finding that cannot be placed on a changed line is listed in the summary instead. Replies
+to comments go through [`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action),
+with [`prompts/OUTPUT_CONVERSATION.md`](prompts/OUTPUT_CONVERSATION.md) in place of the review output.
 
 The agent's first step is orientation: it reads `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` and
 your `.github/workflows/` to learn what CI checks, because **whatever CI checks, it never mentions**.
@@ -125,13 +130,21 @@ what keeps the reviews readable.
 
 ## Costs and limits
 
-- Every review is one API call chain per pass against **your** key. `claude-opus-5-5` at `xhigh` on a large
-  diff is the expensive option; `claude-sonnet-5-5` with `effort: ""` is the cheap one.
+- Every review is one API call chain per pass against **your** key. A review runs when a PR is
+  opened or marked ready and on each `@bot review`, not on every push.
+- Measured on small-to-medium PRs, a review with the default `claude-sonnet-5-5` at `high` effort
+  typically costs $0.10 to $0.13 and takes about 30 seconds. `claude-opus-5-5` costs about three
+  times as much and takes about a minute, and in the same measurements it found more real defects
+  and posted fewer nitpicks. Large PRs cost more with either.
+- `passes` multiplies the cost: three passes cost about three times one. Voting mostly removes
+  nitpicks rather than finding more defects, and the merge step adds time.
 - The default gating exists because a review costs money. Widen `allowed-associations`
   deliberately.
 - Secrets are not available to `pull_request` runs from forked repositories, so the bot does not run
   on fork PRs. That is a safety property, not a bug: a fork PR could otherwise edit your
-  `repo-notes-file` and rewrite the reviewer's instructions.
+  `repo-notes-file` and rewrite the reviewer's instructions. For the same reason, a comment on a PR
+  from another repository reviews your base branch rather than checking out the fork's code.
+- Text the bot posts has the API key and token values redacted.
 - Findings are advisory. The bot has no approval or merge rights, and the workflow requests none.
 
 ## Contributing
@@ -162,9 +175,10 @@ drawn from [`commitlint.config.cjs`](commitlint.config.cjs) - `prompt`, `action`
 `examples`, and so on. `npm install` wires the hook that enforces it locally; CI enforces it again
 on every PR.
 
-Changes to [`prompts/BASE_PROMPT.md`](prompts/BASE_PROMPT.md) are the ones worth arguing about. The
-bar is whether the change raises signal, and whether it stays repo-agnostic: anything that only
-applies to one stack belongs in an `examples/REPO_NOTES-*.md` instead.
+Changes to [`prompts/`](prompts/) are the ones worth arguing about. The bar is whether the change
+raises signal, and whether it stays repo-agnostic: anything that only applies to one stack belongs in
+an `examples/REPO_NOTES-*.md` instead. [`eval/`](eval/DESIGN.md) replays real historical PRs through
+the review to measure a prompt, model, or setting change before it ships.
 
 ## License
 
