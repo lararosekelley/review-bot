@@ -2,7 +2,7 @@
 
     python3 -I eval/harness/replay.py $(python3 -I eval/sandbox/smoke.py cases) --reps 3 --config smoke
     python3 -I eval/sandbox/smoke.py push --ref v1.4.0      # open one PR per smoke case
-    python3 -I eval/sandbox/smoke.py rereview               # ask each PR for a re-review
+    python3 -I eval/sandbox/smoke.py rereview --ref v1.4.0  # ask each PR for a re-review
     python3 -I eval/sandbox/smoke.py compare eval/runs/smoke
     python3 -I eval/sandbox/smoke.py close                  # close the PRs, delete the branches
 
@@ -142,7 +142,20 @@ def unit_of(pr):
     return pr["headRefName"][len(BRANCH):].removesuffix("/head")
 
 
+def pin_default_branch(ref):
+    """Comment-triggered runs use the default branch's workflow, so point it at `ref` too."""
+    current = gh_json("api", f"repos/{SANDBOX}/contents/{WORKFLOW}")
+    text = workflow(ref)
+    if base64.b64decode(current["content"]).decode() == text:
+        return
+    run("gh", "api", "-X", "PUT", f"repos/{SANDBOX}/contents/{WORKFLOW}",
+        "-f", f"message=chore: run review-bot at {ref}", "-f", f"sha={current['sha']}",
+        "-f", f"content={base64.b64encode(text.encode()).decode()}")
+    print(f"default branch now runs the action at {ref}")
+
+
 def cmd_rereview(a):
+    pin_default_branch(a.ref)
     for pr in open_prs():
         run("gh", "pr", "comment", str(pr["number"]), "--repo", SANDBOX, "--body", "@bot review")
         print(f"{unit_of(pr)}: asked for a re-review on {pr['url']}")
@@ -209,7 +222,8 @@ def main():
     push.add_argument("units", nargs="*", help="unit ids (default: smoke.json)")
     push.add_argument("--ref", required=True, help="review-bot tag, branch, or commit to run")
     push.add_argument("--src-root", type=Path, default=Path.home() / "Code/personal")
-    sub.add_parser("rereview", help="ask every open smoke PR for a re-review")
+    rere = sub.add_parser("rereview", help="ask every open smoke PR for a re-review")
+    rere.add_argument("--ref", required=True, help="the ref the PRs were pushed with")
     comp = sub.add_parser("compare", help="compare the posted reviews with a replay configuration")
     comp.add_argument("config", type=Path, help="eval/runs/<config> holding replays of the smoke units")
     comp.add_argument("--verbose", action="store_true")

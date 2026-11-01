@@ -123,8 +123,9 @@ changes:
    the action at that ref. Only the repo owner's PRs and comments trigger it.
 3. Once the reviews post, `sandbox/smoke.py compare eval/runs/smoke-<version>` flags any PR whose
    comment count falls outside the local reps' range or that lacks exactly one summary.
-4. `sandbox/smoke.py rereview` asks each PR for a re-review; compare again, and read the re-review
-   comments for prior findings closed or kept.
+4. `sandbox/smoke.py rereview --ref <same ref>` asks each PR for a re-review. Comment-triggered
+   runs use the default branch's workflow, so it first points that workflow at the ref. Compare
+   again, and read the re-review comments for prior findings closed or kept.
 5. `sandbox/smoke.py close` closes the PRs and deletes their branches.
 
 Each smoke PR spends the sandbox repo's own API key.
