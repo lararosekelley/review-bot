@@ -395,6 +395,21 @@ class Usage(unittest.TestCase):
         self.assertIn("| Pass 2 | $0.100 | 10,010 | 9,000 | 500 |", table)
         self.assertIn("| Total | $0.200 | 20,020 | 18,000 | 1,000 |", table)
 
+    def test_merge_falls_back_to_location_when_the_call_times_out(self):
+        with tempfile.TemporaryDirectory() as d:
+            for i in (1, 2):
+                Path(d, f"pass-{i}.json").write_text(__import__("json").dumps({
+                    "pass": i, "ok": True, "cost_usd": 0.1, "usage": review.usage_of(RESULT),
+                    "output": pass_output([finding(fid="x")])}))
+            out = Path(d, "merged.json")
+            with mock.patch.object(review.subprocess, "run",
+                                   side_effect=review.subprocess.TimeoutExpired("claude", 60)) as run:
+                review.cmd_merge(SimpleNamespace(in_dir=d, min_votes=0, merge_model="m", out=str(out)))
+            merged = __import__("json").loads(out.read_text())
+        self.assertEqual(run.call_args.kwargs["env"]["MAX_THINKING_TOKENS"], "0")
+        self.assertEqual(merged["merge"], "positional")
+        self.assertEqual([f["votes"] for f in merged["findings"]], [2])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -33,6 +33,8 @@ FIXED_MARKER = "<!-- review-bot:fixed -->"
 USAGE_MARKER = re.compile(r"<!-- review-bot:usage (\[.*?\]) -->")
 LOGO_URL = "https://raw.githubusercontent.com/lararosekelley/review-bot/main/assets/logo.svg"
 ANCHOR_SLACK = 3
+# Grouping takes a few seconds; past this, grouping by location is the better trade.
+MERGE_TIMEOUT_S = 60
 HUNK = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 MARKER_TEXT = re.compile(r"review-bot:(?:finding|summary|fixed|usage)", re.I)
 POSTED_N = re.compile(r"<!-- review-bot:finding n=(-?\d+) -->\s*$")
@@ -556,8 +558,10 @@ def merge_command(findings, model):
 
 def merge_with_model(findings, model):
     start = time.time()
+    # Extended thinking turns a few seconds of grouping into minutes, and the groups come out the same.
     proc = subprocess.run(merge_command(findings, model), capture_output=True, text=True,
-                          stdin=subprocess.DEVNULL)
+                          stdin=subprocess.DEVNULL, timeout=MERGE_TIMEOUT_S,
+                          env={**os.environ, "MAX_THINKING_TOKENS": "0"})
     print(f"merge call: {time.time() - start:.1f}s")
     out = json.loads(proc.stdout)
     groups = (out.get("structured_output") or json.loads(out["result"]))["groups"]
@@ -585,7 +589,7 @@ def cmd_merge(a):
             method = "model"
             if not valid_groups(groups, ids):
                 raise ValueError("groups do not cover every finding exactly once")
-        except (ValueError, KeyError, TypeError, json.JSONDecodeError) as e:
+        except (ValueError, KeyError, TypeError, json.JSONDecodeError, subprocess.TimeoutExpired) as e:
             print(f"merge call unusable ({e}); grouping by location")
             groups, method = positional_groups(findings), "positional"
     merged = combine(passes, groups, min_votes)
