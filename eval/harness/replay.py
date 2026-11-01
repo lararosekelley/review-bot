@@ -16,6 +16,7 @@ findings.jsonl, summary.md, meta.json, transcript.jsonl, gh.jsonl.
 
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 import shutil
@@ -51,7 +52,9 @@ def checkout(unit, src_root, work_root):
     the reviewer cannot find the fix in `git log`.
     """
     pr = unit["pr"]
-    name = pr["head_sha"][:12] + (f"-{unit['id']}" if unit.get("seed") else "")
+    # The seed is named by a hash of its patch: a case id would tell the reviewer what to find.
+    seed = unit.get("seed")
+    name = pr["head_sha"][:12] + (f"-{hashlib.sha256(seed['patch'].encode()).hexdigest()[:8]}" if seed else "")
     dest = work_root / unit["repo"].replace("/", "__") / name
     if (dest / ".replay-ready").exists():
         return dest
