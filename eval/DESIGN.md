@@ -110,7 +110,21 @@ separate verification pass. A verification pass is judged on noise removed again
 
 ## Fidelity check
 
-A private sandbox repo runs the real action on about 10 smoke cases whenever the pinned Claude Code
-CLI version changes, and compares its comments with the local replay of the same cases. This covers
-what the replay fakes: posting the review and inline comments through the GitHub API, updating the
-summary comment, and loading prior findings on a re-review.
+`sandbox/smoke.py` runs the real action on the 10 smoke units in `sandbox/smoke.json` and compares
+its reviews with the local replay of the same units. It covers what the replay fakes: posting the
+review and inline comments through the GitHub API, updating the summary comment, and loading prior
+findings on a re-review. Run it before each release and whenever the pinned Claude Code CLI version
+changes:
+
+1. Replay the smoke units locally at the release candidate:
+   `replay.py $(sandbox/smoke.py cases) --reps 3 --config smoke-<version>`.
+2. `sandbox/smoke.py push --ref <branch or sha>` opens one PR per unit in the public sandbox repo
+   (`lararosekelley/review-bot-eval`), with the source repo's workflows replaced by one that runs
+   the action at that ref. Only the repo owner's PRs and comments trigger it.
+3. Once the reviews post, `sandbox/smoke.py compare eval/runs/smoke-<version>` flags any PR whose
+   comment count falls outside the local reps' range or that lacks exactly one summary.
+4. `sandbox/smoke.py rereview` asks each PR for a re-review; compare again, and read the re-review
+   comments for prior findings closed or kept.
+5. `sandbox/smoke.py close` closes the PRs and deletes their branches.
+
+Each smoke PR spends the sandbox repo's own API key.
