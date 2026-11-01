@@ -37,7 +37,7 @@ metadata.
 ## Replay
 
 `harness/replay.py` reviews a unit with the action's own scripts, locally: `assemble-prompt.sh` in
-review mode, then `review.py find`, `merge`, and `post --dry-run`.
+review mode, then `review.py find`, `merge`, optionally `verify` (`--verify`), and `post --dry-run`.
 
 - The repo is cloned at the PR head with every ref except the PR branch and `origin/main` (the
   base) removed and unreachable objects pruned, so the fix is not in history. A seed is folded into

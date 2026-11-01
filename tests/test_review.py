@@ -424,5 +424,45 @@ class Usage(unittest.TestCase):
         self.assertEqual((row["line"], row["reportedLine"]), (14, 16))
 
 
+
+class Verify(unittest.TestCase):
+    def test_apply_verdicts_keeps_findings_without_a_verdict(self):
+        fs = [finding(line=11, title="a"), finding(line=12, title="b"), finding(line=13, title="c")]
+        kept, dropped = review.apply_verdicts(fs, [{"id": 1, "keep": False, "reason": "intended"},
+                                                   {"id": 0, "keep": True, "reason": "holds"}])
+        self.assertEqual([f["title"] for f in kept], ["a", "c"])
+        self.assertEqual(dropped, [{"title": "b", "path": "src/a.rs", "line": 12, "reason": "intended"}])
+
+    def write_merged(self, d):
+        merged = Path(d, "merged.json")
+        merged.write_text(__import__("json").dumps({
+            **pass_output([finding(line=11), finding(line=12)]), "cost_usd": 0.1,
+            "usage": {"total": review.usage_of(RESULT)}}))
+        return merged
+
+    def test_verify_drops_and_counts_its_cost(self):
+        out = {"total_cost_usd": 0.05, "usage": RESULT["usage"],
+               "structured_output": {"verdicts": [{"id": 0, "keep": False, "reason": "intended"}]}}
+        with tempfile.TemporaryDirectory() as d:
+            merged = self.write_merged(d)
+            proc = SimpleNamespace(stdout=__import__("json").dumps(out), stderr="", returncode=0)
+            with mock.patch.object(review.subprocess, "run", return_value=proc):
+                review.cmd_verify(SimpleNamespace(merged=str(merged), model="m", effort="", tools="Read"))
+            result = __import__("json").loads(merged.read_text())
+        self.assertEqual([f["line"] for f in result["findings"]], [12])
+        self.assertEqual(result["dropped"][0]["reason"], "intended")
+        self.assertEqual(result["cost_usd"], 0.15)
+        self.assertEqual(result["usage"]["total"]["output"], 1000)
+
+    def test_verify_failure_posts_every_finding(self):
+        with tempfile.TemporaryDirectory() as d:
+            merged = self.write_merged(d)
+            before = merged.read_text()
+            with mock.patch.object(review.subprocess, "run",
+                                   side_effect=review.subprocess.TimeoutExpired("claude", 600)):
+                review.cmd_verify(SimpleNamespace(merged=str(merged), model="m", effort="", tools="Read"))
+            self.assertEqual(merged.read_text(), before)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -50,6 +50,10 @@ inputs:
     description: "Model that groups duplicate findings across passes."
     required: false
     default: "claude-haiku-4-5-20251001"
+  verify:
+    description: "Check each finding against the code before posting, and drop those the check cannot confirm. Fewer nits, but more missed bugs, and one more call per review that has findings."
+    required: false
+    default: "false"
   show-usage:
     description: "Add the review's estimated cost and token counts to the summary comment. The job's step summary always shows them."
     required: false
@@ -168,6 +172,20 @@ runs:
       run: >-
         python3 "$GITHUB_ACTION_PATH/scripts/review.py" merge --in-dir "$WORK_DIR/passes"
         --min-votes "$MIN_VOTES" --merge-model "$MERGE_MODEL" --out "$WORK_DIR/merged.json"
+
+    - name: Verify findings
+      if: steps.mode.outputs.mode == 'review' && inputs.verify == 'true'
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        MODEL: ${{ inputs.model }}
+        EFFORT: ${{ inputs.effort }}
+        TOOLS: ${{ steps.assemble-review.outputs.tools }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" verify --merged "$WORK_DIR/merged.json"
+        --model "$MODEL" --effort "$EFFORT" --tools "$TOOLS"
 
     - name: Post review
       if: steps.mode.outputs.mode == 'review'

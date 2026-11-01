@@ -33,6 +33,11 @@ on:
         type: string
         required: false
         default: "claude-haiku-4-5-20251001"
+      verify:
+        description: "Check each finding against the code before posting, and drop those the check cannot confirm."
+        type: boolean
+        required: false
+        default: false
       show-usage:
         description: "Add the review's estimated cost and token counts to the summary comment."
         type: boolean
@@ -169,6 +174,7 @@ jobs:
           passes: ${{ inputs.passes }}
           min-votes: ${{ inputs.min-votes > 0 && inputs.min-votes || '' }}
           merge-model: ${{ inputs.merge-model }}
+          verify: ${{ inputs.verify }}
           claude-code-version: ${{ inputs.claude-code-version }}
           show-usage: ${{ inputs.show-usage }}
           trigger-phrase: ${{ inputs.trigger-phrase }}

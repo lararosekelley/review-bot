@@ -137,7 +137,7 @@ def assemble(case, repo_dir, cfg, prompt_file):
 
 
 def run_one(case, repo_dir, cfg, out_dir):
-    """Review one unit with the action's own scripts: find, merge, then a dry-run post.
+    """Review one unit with the action's own scripts: find, merge, optionally verify, then a dry-run post.
 
     Everything the reviewer can see, including its environment, HOME, and the
     scripts it runs under, lives in a private temp directory outside this repo,
@@ -181,6 +181,8 @@ def run_one(case, repo_dir, cfg, out_dir):
          "--out-dir", str(run_tmp / "passes"), "--transcript-dir", str(run_tmp / "transcripts")],
         [*review, "merge", "--in-dir", str(run_tmp / "passes"), "--min-votes", str(cfg.min_votes),
          "--merge-model", cfg.merge_model, "--out", str(run_tmp / "merged.json")],
+        *([[*review, "verify", "--merged", str(run_tmp / "merged.json"), "--model", cfg.model,
+             "--effort", cfg.effort, "--tools", tools]] if cfg.verify else []),
         [*review, "post", "--merged", str(run_tmp / "merged.json"), "--pr", str(case["pr"]["number"] or 0),
          "--dry-run", str(run_tmp / "findings.jsonl")],
     ]
@@ -212,6 +214,7 @@ def run_one(case, repo_dir, cfg, out_dir):
     meta = {
         "case": case["id"], "model": cfg.model, "effort": cfg.effort, "notes": cfg.notes,
         "passes": cfg.passes, "min_votes": merged.get("min_votes"), "merge": merged.get("merge"),
+        "verify": cfg.verify, "dropped": len(merged.get("dropped", [])),
         "status": status, "wall_s": round(time.time() - start, 1),
         "pass_wall_s": [p["wall_s"] for p in passes],
         "cost_usd": merged.get("cost_usd", sum(p.get("cost_usd") or 0 for p in passes)),
@@ -234,6 +237,7 @@ def main():
     p.add_argument("--passes", type=int, default=1)
     p.add_argument("--min-votes", type=int, default=0, help="0 picks 1 for one pass, 2 otherwise")
     p.add_argument("--merge-model", default="claude-haiku-4-5-20251001")
+    p.add_argument("--verify", action="store_true", help="check the merged findings before posting")
     p.add_argument("--reps", type=int, default=1)
     p.add_argument("--jobs", type=int, default=2)
     p.add_argument("--timeout-min", type=int, default=20)
@@ -243,7 +247,8 @@ def main():
     cfg = p.parse_args()
     if "ANTHROPIC_API_KEY" not in os.environ:
         sys.exit("ANTHROPIC_API_KEY is required: replays run with an isolated HOME, like CI.")
-    name = cfg.config or f"{cfg.model}-{cfg.effort or 'unset'}-p{cfg.passes}-notes_{cfg.notes}"
+    name = cfg.config or (f"{cfg.model}-{cfg.effort or 'unset'}-p{cfg.passes}-notes_{cfg.notes}"
+                          + ("-verify" if cfg.verify else ""))
 
     jobs = []
     for unit in units.load(cfg.cases).values():
