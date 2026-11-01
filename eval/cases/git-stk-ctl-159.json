@@ -1,0 +1,21 @@
+{
+  "id": "git-stk-ctl-159",
+  "repo": "lararosekelley/git-stk",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 159,
+    "title": "feat(cli): add credits command",
+    "body": "<!-- git-stk:closes -->\nCloses #145\n<!-- /git-stk:closes -->",
+    "base_sha": "dc11330001c7eb9e3ba81ab172d710151a238747",
+    "head_sha": "f3899260d2a2246bc7ce6116f798846ba768f209",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 0 summary comments during review"
+  }
+}

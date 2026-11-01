@@ -1,0 +1,21 @@
+{
+  "id": "git-stk-ctl-54",
+  "repo": "lararosekelley/git-stk",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 54,
+    "title": "feat(cli): add top/bottom commands",
+    "body": "<!-- git-stk:closes -->\nCloses #36\n<!-- /git-stk:closes -->",
+    "base_sha": "ae29da2fc65d6a2db7ac03177ce2bf7eaf799ea3",
+    "head_sha": "3940bf4c699a3b1cf30844e81876bd1a6ca55117",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 0 summary comments during review"
+  }
+}

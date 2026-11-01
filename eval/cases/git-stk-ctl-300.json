@@ -1,0 +1,21 @@
+{
+  "id": "git-stk-ctl-300",
+  "repo": "lararosekelley/git-stk",
+  "kind": "control",
+  "split": "dev",
+  "pr": {
+    "number": 300,
+    "title": "feat(cli): add cleanup closed reviews functionality",
+    "body": "In my typical workflow, closing a PR is effectively the same to me as merging, in that I'm now done with the branch. This PR adds a config setting to have the CLI automatically clean up closed branches in addition to merged branches:\r\n\r\n\r\n```sh\r\n\u276f /Users/ava/repos/git-stk/target/release/git-stk sync\r\nava/chore/test-close-behavior: review #44 is closed\r\nsync complete: 0 synced, 0 skipped\r\nupdated stack note in #44\r\nwill detach ava/chore/test-close-behavior\r\nwill delete branch ava/chore/test-close-behavior\r\nstack complete: everything merged into main\r\n```\r\n\r\nI'm totally open to suggestions if you see any potential problems with this feature!\r\n\r\nP.S. thanks for making such a great tool! I've been looking for a graphite alternative and this seems to fit my needs quite well!\r\n\r\n(No AI was involved in the making of this PR)",
+    "base_sha": "9618682b5911e5e627f0166282e385cdb159f3dd",
+    "head_sha": "e6d539de093b6c7c12acbef3cbf8b4f994bf53c5",
+    "commits": 4
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 1 summary comments during review"
+  }
+}

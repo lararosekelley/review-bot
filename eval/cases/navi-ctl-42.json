@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-42",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 42,
+    "title": "feat(cli): add `navi logs` to tail the service log",
+    "body": "feat(cli): add `navi logs` to tail the service log\n\n<!-- git-stk:description -->\n`navi logs` tails the background service's logs wherever they live per-OS:\n\n- Linux: `journalctl --user -u navi`\n- macOS: `~/Library/Logs/navi.log`\n- Windows: `%LOCALAPPDATA%\\navi\\navi.log` (the sink #4 added in 0.1.7)\n\nFlags: `-f/--follow` to stream, `-n/--lines N` (default 50). Targets the *service*; a foreground `navi run` logs to its own terminal and has no persistent file, so the command says so if the file isn't there yet. The exit code of the underlying viewer is ignored (following exits non-zero on Ctrl-C); only a failure to launch it is an error.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #5\n<!-- /git-stk:closes -->",
+    "base_sha": "020a713d44c843411f324049f45dfbb1902a527b",
+    "head_sha": "526aab3a9792f05d0359a88e126aea1f4f149a17",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 2 inline and 3 summary comments during review"
+  }
+}

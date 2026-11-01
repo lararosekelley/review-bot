@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-48",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 48,
+    "title": "feat(cli): add `navi doctor` to report provider visibility",
+    "body": "feat(cli): add `navi doctor` to report provider visibility\n\n<!-- git-stk:description -->\n`navi doctor` reports what each configured provider can actually see, so a silent-inbox problem surfaces before you wonder why navi is quiet.\n\nFor GitHub it does a live check: your identity, the orgs your token can see, whether team-detection scope (`read:org`) is present, and an SSO-authorization hint. Other providers get config-level sanity checks. This is what caught the muted-org gap earlier.\n\nCloses #30.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #30\n<!-- /git-stk:closes -->",
+    "base_sha": "11d47673c755774cbf52a84b65ebf15ce784d72a",
+    "head_sha": "7546075b3fd8798227ea96b38f295ea5671ec5d6",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 2 inline and 5 summary comments during review"
+  }
+}

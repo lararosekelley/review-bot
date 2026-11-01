@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-65",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 65,
+    "title": "feat(config): comment_min_age_secs to settle edited comments",
+    "body": "feat(config): comment_min_age_secs to settle edited comments\n\n<!-- git-stk:description -->\nAdds `general.comment_min_age_secs` (default 0 = off): hold a comment until it's at least this old before notifying, so a bot that posts a placeholder and edits it in place (\"Claude Code is working\u2026\" \u2192 the finished review) settles to its final text and you get one accurate alert.\n\nA too-fresh comment is skipped *and* left out of the snapshot's seen-set, so it re-derives next poll and emits its settled body then. `created_at`-based, so edits within the window are captured on the re-fetch. Threaded through `DiffContext` for GitHub and Gitea.\n\nCloses #55.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #55\n<!-- /git-stk:closes -->",
+    "base_sha": "70102dff7d50d118386424ce88ca268b9bb79e75",
+    "head_sha": "da705992e9d789589c832bfc6582d5d6f53c5760",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 1 inline and 3 summary comments during review"
+  }
+}

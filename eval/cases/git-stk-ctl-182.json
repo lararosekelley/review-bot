@@ -1,0 +1,21 @@
+{
+  "id": "git-stk-ctl-182",
+  "repo": "lararosekelley/git-stk",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 182,
+    "title": "chore(cli): more consistent availability of --dry-run/-n in commands",
+    "body": "<!-- git-stk:closes -->\nCloses #168\n<!-- /git-stk:closes -->",
+    "base_sha": "a40195d5ad9cc3f900ac3028da23718c0b333b02",
+    "head_sha": "4a4bc79ddf9f5b8a2f284f032d761c55698246fe",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 0 summary comments during review"
+  }
+}

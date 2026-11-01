@@ -540,5 +540,65 @@
    ],
    "note": "control; bot left 3 inline and 3 summary comments during review"
   }
+ },
+ {
+  "id": "navi-ctl-42",
+  "kind": "control",
+  "intro": 42,
+  "prior_bot": {
+   "status": "n/a",
+   "comment_ids": [],
+   "note": "control; bot left 2 inline and 3 summary comments during review"
+  }
+ },
+ {
+  "id": "navi-ctl-47",
+  "kind": "control",
+  "intro": 47,
+  "prior_bot": {
+   "status": "n/a",
+   "comment_ids": [],
+   "note": "control; bot left 4 inline and 3 summary comments during review"
+  }
+ },
+ {
+  "id": "navi-ctl-48",
+  "kind": "control",
+  "intro": 48,
+  "prior_bot": {
+   "status": "n/a",
+   "comment_ids": [],
+   "note": "control; bot left 2 inline and 5 summary comments during review"
+  }
+ },
+ {
+  "id": "navi-ctl-65",
+  "kind": "control",
+  "intro": 65,
+  "prior_bot": {
+   "status": "n/a",
+   "comment_ids": [],
+   "note": "control; bot left 1 inline and 3 summary comments during review"
+  }
+ },
+ {
+  "id": "navi-ctl-70",
+  "kind": "control",
+  "intro": 70,
+  "prior_bot": {
+   "status": "n/a",
+   "comment_ids": [],
+   "note": "control; bot left 1 inline and 3 summary comments during review"
+  }
+ },
+ {
+  "id": "navi-ctl-96",
+  "kind": "control",
+  "intro": 96,
+  "prior_bot": {
+   "status": "n/a",
+   "comment_ids": [],
+   "note": "control; bot left 1 inline and 3 summary comments during review"
+  }
  }
 ]

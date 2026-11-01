@@ -105,6 +105,7 @@ separate verification pass. A verification pass is judged on noise removed again
 - `harness/sample_triage.py` writes a sample of the judge's triage calls to `labels/` for a person
   to label, to check the judge.
 - `mine/run_all.py` rebuilds the cases from git history and PR metadata.
+- `mine/pick_controls.py` lists merged PRs that qualify as controls, with the split each lands on.
 - `mine/check_seeds.py` checks that every seeded case still builds and passes its repo's tests; a
   seed the tests catch does not belong in the set.
 

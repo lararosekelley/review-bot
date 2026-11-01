@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-96",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "dev",
+  "pr": {
+    "number": 96,
+    "title": "feat(source): honor general.backfill on gitlab and gitea too",
+    "body": "Closes #91. Honor `general.backfill` on GitLab and Gitea too.\n\n`general.backfill` (#15) only affected GitHub \u2014 a global-looking knob silently ignored by the other two sources.\n\n### Change\n- **Gitea**: its new involved-PR sweep (#95) runs the forge diff, so it honors `first_sight_backfill` the same way GitHub does \u2014 first-run detection + `sweep_backfill` on the open sweep.\n- **GitLab**: its `mr_diff` baselined silently on first sight; now `MrContext.first_sight_backfill` lets `all_open` surface the MR's derivable activity on the first poll instead. `none`/`review_requests` stay silent (review requests come from the todos path, so `mr_diff` has none to backfill).\n\nAll three sources now read `config.general.backfill`; starter-config comment updated to say it applies to every source.\n\n### Tests\nGitLab `all_open_backfill_surfaces_on_first_sight` (default baselines silently; `all_open` fires `Merged` on first sight). Gitea rides the existing forge diff-mode tests + the #95 sweep path.",
+    "base_sha": "65d669577f1940a4d34080e939cc846f8b599893",
+    "head_sha": "34ace603279110e5fad70103cae099002ec5da62",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 1 inline and 3 summary comments during review"
+  }
+}

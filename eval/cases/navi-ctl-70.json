@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-70",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "dev",
+  "pr": {
+    "number": 70,
+    "title": "feat(engine): route events by repo pattern, not just source",
+    "body": "feat(engine): route events by repo pattern, not just source\n\n<!-- git-stk:description -->\nRoutes can now be scoped to specific repos, so one source's events fan out to different destinations by origin \u2014 e.g. work repos to Slack, personal repos to email.\n\n`[[routes]]` gains an optional `repos` glob list (same syntax as `rules.repos`: `owner/*`, `owner/prefix-*`, `*/prefix-*`). A route fires when its source matches **and** its `repos` are empty (all repos, back-compat) or match the event's repo. Routing moved from per-source to per-event; every matching route's destination receives the event (fan-out). With no routes configured at all, the old \"every destination\" fallback stands. The repo matcher is shared with `rules.repos` so globs behave identically.\n\nCloses #11.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #11\n<!-- /git-stk:closes -->",
+    "base_sha": "ce1bcecbfb44a515d82bfc1f1a841147f0dcd0df",
+    "head_sha": "db05a96c382dc0894e5ab311dc522ed3a48dfa0f",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 1 inline and 3 summary comments during review"
+  }
+}

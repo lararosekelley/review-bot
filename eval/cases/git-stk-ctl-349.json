@@ -1,0 +1,21 @@
+{
+  "id": "git-stk-ctl-349",
+  "repo": "lararosekelley/git-stk",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 349,
+    "title": "feat(cli): add comment command to post on a branch's review",
+    "body": "<!-- git-stk:description -->\nAdds `git stk comment <message>` to post a comment on the current branch's review (`--branch` for another, `--dry-run` to preview), via `gh`, `glab`, or `tea`. For example, `git stk comment \"@claude review\"` asks a review bot for another pass.\n<!-- /git-stk:description -->",
+    "base_sha": "f2ce9b168d4d411aa266892505cbd22b521d7599",
+    "head_sha": "8d59bbc8ac3104476a6287a4f5b0d95ab882b806",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 5 inline and 7 summary comments during review"
+  }
+}

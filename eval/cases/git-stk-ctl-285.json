@@ -1,0 +1,21 @@
+{
+  "id": "git-stk-ctl-285",
+  "repo": "lararosekelley/git-stk",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 285,
+    "title": "feat(code): add git::worktree_branches to detect branches held elsewhere",
+    "body": "Adds the primitive the rest of the worktree work builds on: `worktree_branches()` lists the branches checked out in *other* worktrees along with the directory holding each, and `worktree_holding()` answers the single-branch question callers mostly ask. Plus `display_path`, which shortens those paths to `../wt-a` when it safely can, so the messages built on them stay pasteable.\n\nParsing is split into a pure function so it is tested against fixture porcelain, including the bare and detached records that hold no branch. No behavior change on its own.\n\n<!-- git-stk:closes -->\nCloses #274\n<!-- /git-stk:closes -->",
+    "base_sha": "06a433907897dcf7f379c86550a8b553ae0bf1b6",
+    "head_sha": "3da900b416be2c40ec9640cce3fd23c1a554d517",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 0 inline and 1 summary comments during review"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "navi-ctl-47",
+  "repo": "lararosekelley/navi",
+  "kind": "control",
+  "split": "holdout",
+  "pr": {
+    "number": 47,
+    "title": "feat(rules): pattern and regex mute filters",
+    "body": "feat(rules): pattern and regex mute filters\n\n<!-- git-stk:description -->\nPattern and regex mute filters, for noisier suppression than exact-login mutes.\n\n`[[rules.mute]]` entries match on `author`, `title`, or `excerpt`. Default is a case-insensitive substring match; `regex = true` switches to a full regex (use `(?i)` for case-insensitivity). Patterns compile once at startup, so a bad regex is a config error, not a per-event surprise.\n\nCloses #44.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #44\n<!-- /git-stk:closes -->",
+    "base_sha": "ceb49715d004ad12c641d1ee0a8b60d95c16da2a",
+    "head_sha": "88526b12e513e5fbc112889f37ad5ffc24d1411f",
+    "commits": 1
+  },
+  "fix": null,
+  "expected": [],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "control; bot left 4 inline and 3 summary comments during review"
+  }
+}
