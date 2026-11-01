@@ -54,6 +54,9 @@ jobs:
 
 The `permissions` block is required.
 
+`@v1` follows each 1.x release; an exact tag such as `@v1.4.0` stays on that release. The workflow
+runs the action from its own commit, so either pin covers both.
+
 That's it! Opening a PR triggers a review; commenting `@bot review` on a PR runs
 another one; replying `@bot` to one of its inline comments starts a conversation on that thread.
 

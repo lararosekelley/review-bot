@@ -10,7 +10,7 @@ The replay fakes GitHub, so only the real action exercises posting the review
 and its inline comments, updating the summary comment, and loading prior
 findings on a re-review. Each smoke case becomes a PR in the sandbox repo whose
 base and head carry the case's trees, with the source repo's own workflows
-swapped for a review workflow that runs the action at `--ref`. The PR diff is the
+swapped for the reusable review workflow at `--ref`. The PR diff is the
 case's diff, except for changes to `.github/workflows`.
 
 Every PR runs a real review against the sandbox repo's ANTHROPIC_API_KEY.
@@ -36,12 +36,14 @@ SANDBOX = "lararosekelley/review-bot-eval"
 WORKFLOW = ".github/workflows/code-review.yml"
 BRANCH = "smoke/"
 FINDING_MARKER = "<!-- review-bot:finding"
-# The sandbox is public, so only the owner's PRs and comments may spend its key.
+# The reusable workflow's default gating lets only the repo owner spend the sandbox's key.
 WORKFLOW_TEMPLATE = """name: "Code Review Bot"
 
 on:
   pull_request:
     types: [opened, ready_for_review]
+  pull_request_review_comment:
+    types: [created]
   issue_comment:
     types: [created]
 
@@ -54,20 +56,9 @@ permissions:
 
 jobs:
   review:
-    if: >-
-      (github.event_name == 'pull_request' && github.event.pull_request.author_association == 'OWNER') ||
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
-        contains(github.event.comment.body, '@bot review') && github.event.comment.author_association == 'OWNER')
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-          ref: refs/pull/${{ github.event.pull_request.number || github.event.issue.number }}/head
-      - uses: lararosekelley/review-bot@REF
-        with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+    uses: lararosekelley/review-bot/.github/workflows/review.yml@REF
+    secrets:
+      anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 """
 SUMMARY_MARKER = "<!-- review-bot:summary -->"
 
@@ -91,7 +82,7 @@ def smoke_units(ids):
 
 
 def workflow(ref):
-    """The action called directly at `ref`: the reusable workflow always runs the action at @v1."""
+    """The reusable workflow at `ref`, which runs the action from the same commit."""
     return WORKFLOW_TEMPLATE.replace("REF", ref)
 
 

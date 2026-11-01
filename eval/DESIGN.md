@@ -119,8 +119,8 @@ changes:
 1. Replay the smoke units locally at the release candidate:
    `replay.py $(sandbox/smoke.py cases) --reps 3 --config smoke-<version>`.
 2. `sandbox/smoke.py push --ref <branch or sha>` opens one PR per unit in the public sandbox repo
-   (`lararosekelley/review-bot-eval`), with the source repo's workflows replaced by one that runs
-   the action at that ref. Only the repo owner's PRs and comments trigger it.
+   (`lararosekelley/review-bot-eval`), with the source repo's workflows replaced by the reusable
+   workflow at that ref. Only the repo owner's PRs and comments trigger it.
 3. Once the reviews post, `sandbox/smoke.py compare eval/runs/smoke-<version>` flags any PR whose
    comment count falls outside the local reps' range or that lacks exactly one summary.
 4. `sandbox/smoke.py rereview --ref <same ref>` asks each PR for a re-review. Comment-triggered
