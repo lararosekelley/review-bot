@@ -1,0 +1,38 @@
+{
+  "id": "git-stk-seed-wrapper-unquoted-cd",
+  "repo": "lararosekelley/git-stk",
+  "kind": "seeded",
+  "split": "dev",
+  "pr": {
+    "number": 299,
+    "title": "feat(shell): add setup --wrapper to install the stk function and its completion",
+    "body": "<!-- git-stk:description -->\n`git stk setup --wrapper` now installs the `stk` shell function alongside the\ncompletion line, and teaches the shell to complete `stk` the same way it completes\n`git-stk`. bash and zsh only \u2014 fish needs different syntax, and PowerShell declines\nwith an explanation rather than writing shell-function syntax into `$PROFILE`.\n\n### Decisions worth reviewing\n\n- **Opt-in.** It defines a new command name, so plain `setup` doesn't write it (and\n  advertises the flag instead). Setup skips it, saying why, when an `stk` executable is\n  on `PATH` or the rc already defines one \u2014 it never wins that collision.\n- **The completion alias is guarded.** Unguarded, `complete -p git-stk | sed \u2026` prints\n  `complete: git-stk: no completion specification` on *every shell start* whenever the\n  registration is absent. Now a missing registration costs `stk` completion and nothing\n  else.\n- **The block closes with `# end git-stk setup`.** This was the real hazard:\n  `strip_completion_block` removed marker + one line, so `uninstall` would have left ~15\n  orphaned wrapper lines. Strip now removes the block whole, with a fallback to the old\n  single-line shape so blocks written by 0.11.0/0.11.1 still uninstall cleanly.\n- **Re-running merges.** `setup -y` then `setup -y --wrapper` rewrites the one block\n  instead of appending a second. If the completion line was hand-added without our\n  marker, setup refuses to rewrite it and prints the wrapper to paste \u2014 the same policy\n  `uninstall` already uses.\n\n### Verification status\n\nbash is verified end to end: the generated block sourced in a real bash with `git-stk`\non `PATH` (function defined, `complete -p stk` registered, `stk res<TAB>` \u2192 `restack`,\n`stk up`/`down` crossing worktrees), sourced again with `PATH=/nonexistent` to confirm\nsilence, and `uninstall` shown to lift all 19 lines while leaving surrounding user lines\nintact. The e2e commit's bash step was also extracted from the YAML and run verbatim\nagainst an Ubuntu-style early-returning `.bashrc`.\n\n**zsh and pwsh are not verified locally** \u2014 neither shell is installed on my machine, so\ntheir first real run is the next E2E dispatch. In particular the macOS cell asserts\n`compdef stk=git-stk` populates `$_comps[stk]`; if that mechanism is wrong for clap's\ndynamic zsh completion, that cell will fail and block the release. Worth a manual\n`workflow_dispatch` of E2E before tagging rather than finding out at release time.\n\nFish has no cell in the e2e matrix, so its decline path is covered only by\n`tests/setup.rs`.\n<!-- /git-stk:description -->",
+    "base_sha": "ca0101ccf5320566bef43a6d53d869a261b1984b",
+    "head_sha": "a2f11d5e2407984eff6f50339bb7f2755ab62e58",
+    "commits": 2
+  },
+  "seed": {
+    "control": "git-stk-ctl-299",
+    "mutation": "unescaped shell interpolation",
+    "check": "cargo test --locked --no-fail-fast --features test-fakes --jobs 8",
+    "patch": "diff --git a/src/setup.rs b/src/setup.rs\nindex 7313b7a..5975142 100644\n--- a/src/setup.rs\n+++ b/src/setup.rs\n@@ -37,7 +37,7 @@ stk() {\n     up|down|top|bottom)\n       local dest\n       dest=$(git stk \"$@\" --from-path) || return\n-      [ -n \"$dest\" ] && cd \"$dest\"\n+      [ -n \"$dest\" ] && cd $dest\n       ;;\n     *) git stk \"$@\" ;;\n   esac\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "src/setup.rs",
+      "line": 40,
+      "window": 5,
+      "alt": [],
+      "description": "The stk wrapper runs `cd $dest` unquoted, so a worktree path with spaces or glob characters is word-split and the cd fails or goes to the wrong directory.",
+      "severity": "medium",
+      "visibility": "high",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

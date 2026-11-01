@@ -1,0 +1,38 @@
+{
+  "id": "navi-seed-fallback-claimed-any-source",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "holdout",
+  "pr": {
+    "number": 113,
+    "title": "feat(engine): fallback route for events no other route claims",
+    "body": "feat(engine): fallback route for events no other route claims\n\n<!-- git-stk:closes -->\nCloses #111\n<!-- /git-stk:closes -->",
+    "base_sha": "9ee5b96f659ddf7f3cac20ef1b099504598beb1f",
+    "head_sha": "8d128289249e4a012173a3f46c9f17efa80e5696",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-113",
+    "mutation": "ignored parameter",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier-core/src/engine.rs b/crates/navi-notifier-core/src/engine.rs\nindex 233466d..19ec991 100644\n--- a/crates/navi-notifier-core/src/engine.rs\n+++ b/crates/navi-notifier-core/src/engine.rs\n@@ -137,7 +137,9 @@ impl Engine {\n                 && (r.repos.is_empty() || r.repos.iter().any(|p| pattern_matches(p, &repo)))\n         };\n         // A normal route claiming this event locks out the fallback bucket.\n-        let claimed = self.routes.iter().any(|r| !r.fallback && matches(r));\n+        let claimed = self.routes.iter().any(|r| {\n+            !r.fallback && (r.repos.is_empty() || r.repos.iter().any(|p| pattern_matches(p, &repo)))\n+        });\n         self.destinations\n             .iter()\n             .filter(|n| {\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier-core/src/engine.rs",
+      "line": 140,
+      "window": 5,
+      "alt": [],
+      "description": "Whether a normal route claims an event ignores the route's source, so a route for one source covering a repo suppresses the fallback for another source's events in that repo, and they are delivered nowhere.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

@@ -197,7 +197,8 @@ def score_run(run_dir, case, repo_dir, judge):
 
 def summarize(scores):
     ok = [s for s in scores if s["status"] == "ok"]
-    hist = [s for s in ok if s["kind"] != "control"]
+    hist = [s for s in ok if s["kind"] == "historical"]
+    seeded = [s for s in ok if s["kind"] == "seeded"]
     ctl = [s for s in ok if s["kind"] == "control"]
 
     def recall(runs, strict, vis=None):
@@ -211,6 +212,10 @@ def summarize(scores):
                            for m in s["matches"])
         return (hit / total, total) if total else (None, 0)
 
+    def location_accuracy(runs):
+        ms = [m for s in runs for m in s["matches"] if m["verdict"] == "yes"]
+        return sum(m["at_location"] for m in ms) / len(ms) if ms else None
+
     def per_run(runs, key):
         return mean(key(s) for s in runs) if runs else None
 
@@ -218,8 +223,9 @@ def summarize(scores):
         "runs": len(scores), "failed": len(scores) - len(ok),
         "recall_strict": recall(hist, True), "recall_lenient": recall(hist, False),
         "recall_by_visibility": {v: recall(hist, True, v) for v in ("high", "medium", "low")},
-        "location_accuracy": (lambda ms: sum(m["at_location"] for m in ms) / len(ms) if ms else None)(
-            [m for s in hist for m in s["matches"] if m["verdict"] == "yes"]),
+        "location_accuracy": location_accuracy(hist),
+        "seeded_recall_strict": recall(seeded, True), "seeded_recall_lenient": recall(seeded, False),
+        "seeded_location_accuracy": location_accuracy(seeded),
         "posted_per_pr": per_run(ok, lambda s: s["posted"]),
         "valid_unlabeled_per_pr": per_run(ok, lambda s: sum(t["verdict"] == "valid" for t in s["triage"])),
         "nit_per_pr": per_run(ok, lambda s: sum(t["verdict"] == "nit" for t in s["triage"])),

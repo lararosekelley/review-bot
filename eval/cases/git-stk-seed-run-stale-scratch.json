@@ -1,0 +1,38 @@
+{
+  "id": "git-stk-seed-run-stale-scratch",
+  "repo": "lararosekelley/git-stk",
+  "kind": "seeded",
+  "split": "dev",
+  "pr": {
+    "number": 292,
+    "title": "feat(run): run in a scratch worktree by default, with --no-worktree to opt out",
+    "body": "`run` now executes in a throwaway detached worktree under `.git`, so your own checkout never moves: uncommitted work is no longer a blocker, HEAD stays put, and nothing retriggers the file watchers and rebuilds in the directory you are sitting in.\n\n**Behavior change worth review:** a fresh worktree has no untracked build output - no `node_modules`, no `target/` - so a command that depends on those may fail there having passed in your checkout. `--no-worktree` restores the old path (and keeps its clean-tree requirement). A crashed run's orphan is reclaimed by the next run rather than via a signal handler, mirroring how `Lock` handles staleness.\n\n<!-- git-stk:closes -->\nCloses #280\n<!-- /git-stk:closes -->",
+    "base_sha": "ff95270291316068ae3c15d94b85cf9ba34df49c",
+    "head_sha": "bae3af080658bc677d03bfe43b4a1704c6ed7f96",
+    "commits": 1
+  },
+  "seed": {
+    "control": "git-stk-ctl-292",
+    "mutation": "removed worktree guard",
+    "check": "cargo test --locked --no-fail-fast --features test-fakes --jobs 8",
+    "patch": "diff --git a/src/commands/run.rs b/src/commands/run.rs\nindex 04306be..e49df48 100644\n--- a/src/commands/run.rs\n+++ b/src/commands/run.rs\n@@ -100,14 +100,6 @@ impl ScratchWorktree {\n     fn create(commit: &str) -> Result<Self> {\n         let path = crate::git::git_common_path_absolute(SCRATCH_DIR)?;\n \n-        // A leftover from a crashed or killed run. `run` holds the lock for its\n-        // whole window, so anything here is stale by definition - reclaim it\n-        // rather than failing.\n-        if path.exists() {\n-            let _ = crate::git::worktree_remove(&path);\n-            let _ = std::fs::remove_dir_all(&path);\n-        }\n-\n         crate::git::worktree_add_detached(&path, commit)?;\n         Ok(Self { path })\n     }\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "src/commands/run.rs",
+      "line": 103,
+      "window": 5,
+      "alt": [],
+      "description": "ScratchWorktree::create no longer reclaims a scratch worktree left by a crashed or killed run, so `worktree add` fails on the existing path and every later `git stk run` fails until the user removes it by hand.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

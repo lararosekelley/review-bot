@@ -51,7 +51,8 @@ def checkout(unit, src_root, work_root):
     the reviewer cannot find the fix in `git log`.
     """
     pr = unit["pr"]
-    dest = work_root / unit["repo"].replace("/", "__") / pr["head_sha"][:12]
+    name = pr["head_sha"][:12] + (f"-{unit['id']}" if unit.get("seed") else "")
+    dest = work_root / unit["repo"].replace("/", "__") / name
     if (dest / ".replay-ready").exists():
         return dest
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -72,6 +73,8 @@ def build_checkout(unit, src_root, dest):
     subprocess.run(["git", "clone", "--quiet", "--no-checkout", str(src), str(dest)], check=True)
     branch = f"pr-{pr['number'] or 0}"
     git(dest, "checkout", "--quiet", "-B", branch, pr["head_sha"])
+    if unit.get("seed"):
+        apply_seed(dest, unit["seed"]["patch"])
     for ref in git(dest, "for-each-ref", "--format=%(refname)").splitlines():
         if ref != f"refs/heads/{branch}":
             git(dest, "update-ref", "-d", ref)
@@ -79,12 +82,27 @@ def build_checkout(unit, src_root, dest):
     git(dest, "update-ref", "refs/remotes/origin/main", pr["base_sha"])
     git(dest, "reflog", "expire", "--expire=now", "--all")
     git(dest, "gc", "--quiet", "--prune=now")
-    for fix in unit["fixes"]:
-        if subprocess.run(["git", "cat-file", "-e", fix], cwd=dest).returncode == 0:
-            raise RuntimeError(f"{unit['id']}: fix {fix} still reachable in replay checkout")
+    hidden = unit["fixes"] + ([pr["head_sha"]] if unit.get("seed") else [])
+    for sha in hidden:
+        if subprocess.run(["git", "cat-file", "-e", sha], cwd=dest).returncode == 0:
+            raise RuntimeError(f"{unit['id']}: {sha} still reachable in replay checkout")
     (dest / ".git" / "info" / "exclude").write_text(".replay-ready\n")
     (dest / ".replay-ready").touch()
     return dest
+
+
+def apply_seed(dest, patch):
+    """Fold the seeded defect into the PR's last commit, keeping its message, author, and dates.
+
+    The unseeded head is then unreachable and pruned, so the reviewer cannot
+    diff against it to find the seed.
+    """
+    subprocess.run(["git", "apply", "--index", "-"], cwd=dest, input=patch, text=True, check=True)
+    name, email, date = git(dest, "log", "-1", "--format=%cn%x00%ce%x00%cI").split("\0")
+    env = {**os.environ, "GIT_COMMITTER_NAME": name, "GIT_COMMITTER_EMAIL": email,
+           "GIT_COMMITTER_DATE": date}
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "--quiet", "--amend", "--no-edit",
+                    "--no-verify"], cwd=dest, env=env, check=True)
 
 
 def assemble(case, repo_dir, cfg, prompt_file):
@@ -132,7 +150,9 @@ def run_one(case, repo_dir, cfg, out_dir):
     shutil.copy(prompt_file, out_dir / "prompt.md")
 
     case_path = run_tmp / "pr.json"
-    case_path.write_text(json.dumps({"repo": case["repo"], "pr": case["pr"]}))
+    # A seeded head differs from the recorded one.
+    pr = {**case["pr"], "head_sha": git(repo_dir, "rev-parse", "HEAD")}
+    case_path.write_text(json.dumps({"repo": case["repo"], "pr": pr}))
     gh_log = run_tmp / "gh.jsonl"
     gh_log.write_text("")
     shutil.copy(HERE / "fake_gh.py", bin_dir / "fake_gh.py")
@@ -203,7 +223,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("cases", nargs="*", type=Path, help="case files (default: every case)")
     p.add_argument("--split", choices=["dev", "holdout"])
-    p.add_argument("--kind", choices=["historical", "control"])
+    p.add_argument("--kind", choices=["historical", "seeded", "control"])
     p.add_argument("--model", default="claude-sonnet-5-5")
     p.add_argument("--effort", default="high")
     p.add_argument("--notes", choices=["head", "none"], default="head",

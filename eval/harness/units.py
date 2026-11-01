@@ -1,7 +1,8 @@
 """Group cases into replay units: one per PR head, holding every bug from it.
 
 A PR that introduced several bugs is reviewed once and scored against all of
-them, so a finding about any of its bugs counts.
+them, so a finding about any of its bugs counts. A seeded case is a unit of its
+own, since its seed changes the PR head.
 """
 
 import json
@@ -11,6 +12,8 @@ EVAL = Path(__file__).resolve().parent.parent
 
 
 def unit_id(case):
+    if case.get("seed"):
+        return case["id"]
     repo = case["repo"].split("/")[1]
     pr = case["pr"]
     return f"{repo}-pr{pr['number']}" if pr["number"] else f"{repo}-c{pr['head_sha'][:7]}"
@@ -24,7 +27,7 @@ def group(cases):
         uid = unit_id(case)
         unit = units.setdefault(uid, {
             "id": uid, "repo": case["repo"], "kind": "control", "split": case["split"],
-            "pr": case["pr"], "cases": [], "fixes": [], "expected": [],
+            "pr": case["pr"], "seed": case.get("seed"), "cases": [], "fixes": [], "expected": [],
         })
         if unit["split"] != case["split"]:
             raise ValueError(f"{uid}: cases disagree on split")
@@ -34,7 +37,7 @@ def group(cases):
         for exp in case["expected"]:
             unit["expected"].append({**exp, "case": case["id"]})
         if case["kind"] != "control":
-            unit["kind"] = "historical"
+            unit["kind"] = case["kind"]
     return units
 
 

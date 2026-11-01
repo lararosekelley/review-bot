@@ -1,0 +1,38 @@
+{
+  "id": "navi-seed-hhmm-hour-24",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "dev",
+  "pr": {
+    "number": 131,
+    "title": "feat(cli): validate config in `navi doctor` (static checks + --offline)",
+    "body": "feat(cli): validate config in `navi doctor` (static checks + --offline)\n\n<!-- git-stk:closes -->\nCloses #116\n<!-- /git-stk:closes -->",
+    "base_sha": "bd333dcc7b72d0e1dd3868631c4da77e8246dc19",
+    "head_sha": "c206ed28cc1cbe3111801ac564bbed6af03bf266",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-131",
+    "mutation": "off-by-one bound",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier/src/config.rs b/crates/navi-notifier/src/config.rs\nindex 4818401..4892e10 100644\n--- a/crates/navi-notifier/src/config.rs\n+++ b/crates/navi-notifier/src/config.rs\n@@ -590,7 +590,7 @@ fn is_valid_repo_glob(pattern: &str) -> bool {\n fn is_hhmm(s: &str) -> bool {\n     matches!(s.split_once(':'), Some((h, m))\n         if h.len() == 2 && m.len() == 2\n-        && h.parse::<u8>().is_ok_and(|h| h < 24)\n+        && h.parse::<u8>().is_ok_and(|h| h <= 24)\n         && m.parse::<u8>().is_ok_and(|m| m < 60))\n }\n \n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/config.rs",
+      "line": 593,
+      "window": 5,
+      "alt": [],
+      "description": "is_hhmm accepts hour 24 (`h <= 24`), so doctor reports times like 24:30 as valid.",
+      "severity": "low",
+      "visibility": "high",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

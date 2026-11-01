@@ -1,0 +1,38 @@
+{
+  "id": "navi-seed-excerpt-regex-flag",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "holdout",
+  "pr": {
+    "number": 66,
+    "title": "feat(rules): multi-condition mute rules with per-field regex",
+    "body": "feat(rules): multi-condition mute rules with per-field regex\n\n<!-- git-stk:description -->\nLets one `[[rules.mute]]` rule combine conditions \u2014 all must match (AND) \u2014 so you can scope a mute instead of muting a whole author:\n\n```toml\n[[rules.mute]]\nauthor  = \"github-actions[bot]\"\nexcerpt = \"CircleCI pipeline triggered\"\n```\n\nFlat fields (`author`/`title`/`excerpt`, each with an optional `<field>_regex`) compose with the existing single `match`/`pattern` form (unchanged, still works). A rule with **no** conditions is a config error \u2014 otherwise \"all match\" is vacuously true and it would mute the whole feed.\n\nCloses #54.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #54\n<!-- /git-stk:closes -->",
+    "base_sha": "cddfb1621350327c4db4705c24b61398e03c6473",
+    "head_sha": "b0d23df069ccb8553d4ff6a84ba40166e7d7ded6",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-66",
+    "mutation": "ignored parameter",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier-core/src/rules.rs b/crates/navi-notifier-core/src/rules.rs\nindex 3bbe75d..95de4de 100644\n--- a/crates/navi-notifier-core/src/rules.rs\n+++ b/crates/navi-notifier-core/src/rules.rs\n@@ -168,7 +168,7 @@ fn compile_mute(rule: &MuteRule) -> Result<CompiledMute, InvalidMutePattern> {\n         conditions.push(compile_condition(\n             MuteField::Excerpt,\n             pattern,\n-            rule.excerpt_regex,\n+            rule.title_regex,\n         )?);\n     }\n     if conditions.is_empty() {\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier-core/src/rules.rs",
+      "line": 171,
+      "window": 5,
+      "alt": [],
+      "description": "The excerpt condition is compiled with title_regex instead of excerpt_regex, so `excerpt_regex = true` is ignored (the pattern is matched as a substring) and setting title_regex turns the excerpt pattern into a regex.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

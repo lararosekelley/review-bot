@@ -1,0 +1,38 @@
+{
+  "id": "navi-seed-editor-shell",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "dev",
+  "pr": {
+    "number": 110,
+    "title": "feat(cli): add `navi config edit` and `navi env` to open files in $EDITOR",
+    "body": "feat(cli): add `navi config edit` and `navi env` to open files in $EDITOR\n\n<!-- git-stk:closes -->\nCloses #108\n<!-- /git-stk:closes -->",
+    "base_sha": "a9e59344549e41da33a517f36c9f00acea1affcc",
+    "head_sha": "e50c8abb885c563edff56b4f947b111778ce9039",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-110",
+    "mutation": "unescaped shell interpolation",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier/src/editor.rs b/crates/navi-notifier/src/editor.rs\nindex 044a5e4..fa7cfe0 100644\n--- a/crates/navi-notifier/src/editor.rs\n+++ b/crates/navi-notifier/src/editor.rs\n@@ -19,18 +19,14 @@ pub fn open(path: &Path) -> Result<()> {\n         })\n         .unwrap_or_else(|| default_editor().to_string());\n \n-    let mut parts = editor.split_whitespace();\n-    // Non-empty by construction: the env vars are filtered for non-blank content and\n-    // `default_editor()` is a literal, so there is always at least one whitespace token.\n-    let program = parts.next().expect(\"editor string is never empty\");\n-\n-    let status = Command::new(program)\n-        .args(parts)\n-        .arg(path)\n+    // Through the shell, so an editor string with flags (`code -w`) runs as typed.\n+    let status = Command::new(\"sh\")\n+        .arg(\"-c\")\n+        .arg(format!(\"{editor} {}\", path.display()))\n         .status()\n-        .with_context(|| format!(\"launching editor `{program}`\"))?;\n+        .with_context(|| format!(\"launching editor `{editor}`\"))?;\n     if !status.success() {\n-        bail!(\"editor `{program}` exited with {status}\");\n+        bail!(\"editor `{editor}` exited with {status}\");\n     }\n     Ok(())\n }\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/editor.rs",
+      "line": 25,
+      "window": 5,
+      "alt": [],
+      "description": "The editor runs through `sh -c` with the file path interpolated unquoted, so a config path with spaces (macOS Application Support) or shell metacharacters breaks or runs as shell code.",
+      "severity": "high",
+      "visibility": "medium",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}
