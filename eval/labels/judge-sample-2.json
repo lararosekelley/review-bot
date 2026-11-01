@@ -1,0 +1,384 @@
+[
+  {
+    "n": 1,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr102",
+    "run": "1",
+    "path": "src/commands/run.rs",
+    "line": 58,
+    "judge": "valid"
+  },
+  {
+    "n": 2,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "navi-pr99",
+    "run": "2",
+    "path": "crates/navi-notifier-github/tests/poll.rs",
+    "line": 487,
+    "expected": 0,
+    "judge": "partial"
+  },
+  {
+    "n": 3,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-ca1a570c",
+    "run": "1",
+    "path": "crates/navi-notifier/src/service.rs",
+    "line": 134,
+    "judge": "valid"
+  },
+  {
+    "n": 4,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr291",
+    "run": "2",
+    "path": "src/stack/nav.rs",
+    "line": 37,
+    "judge": "wrong"
+  },
+  {
+    "n": 5,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr102",
+    "run": "1",
+    "path": "src/commands/run.rs",
+    "line": 81,
+    "expected": 0,
+    "judge": "yes"
+  },
+  {
+    "n": 6,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr108",
+    "run": "2",
+    "path": "src/commands/absorb.rs",
+    "line": 146,
+    "judge": "valid"
+  },
+  {
+    "n": 7,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr372",
+    "run": "1",
+    "path": "src/tour/plan.rs",
+    "line": 227,
+    "judge": "valid"
+  },
+  {
+    "n": 8,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr130",
+    "run": "1",
+    "path": "tests/demo.rs",
+    "line": 349,
+    "expected": 0,
+    "judge": "partial"
+  },
+  {
+    "n": 9,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-seed-wrapper-unquoted-cd",
+    "run": "1",
+    "path": "src/setup.rs",
+    "line": 92,
+    "judge": "valid"
+  },
+  {
+    "n": 10,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr55",
+    "run": "0",
+    "path": "src/setup.rs",
+    "line": 112,
+    "judge": "nit"
+  },
+  {
+    "n": 11,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-pr110",
+    "run": "0",
+    "path": "crates/navi-notifier/src/editor.rs",
+    "line": 23,
+    "judge": "nit"
+  },
+  {
+    "n": 12,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-c0dfa614",
+    "run": "1",
+    "path": "src/providers.rs",
+    "line": 306,
+    "judge": "valid"
+  },
+  {
+    "n": 13,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-seed-hhmm-hour-24",
+    "run": "1",
+    "path": "crates/navi-notifier/src/config.rs",
+    "line": 578,
+    "judge": "valid"
+  },
+  {
+    "n": 14,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "navi-ca1a570c",
+    "run": "2",
+    "path": "crates/navi-notifier/src/service.rs",
+    "line": 347,
+    "expected": 0,
+    "judge": "yes"
+  },
+  {
+    "n": 15,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-pr110",
+    "run": "2",
+    "path": "crates/navi-notifier/src/cli.rs",
+    "line": 68,
+    "judge": "nit"
+  },
+  {
+    "n": 16,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-pr131",
+    "run": "2",
+    "path": "crates/navi-notifier/src/config.rs",
+    "line": 405,
+    "judge": "valid"
+  },
+  {
+    "n": 17,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr132",
+    "run": "1",
+    "path": "src/lock.rs",
+    "line": 43,
+    "expected": 1,
+    "judge": "yes"
+  },
+  {
+    "n": 18,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr130",
+    "run": "0",
+    "path": "src/commands/submit.rs",
+    "line": 261,
+    "expected": 0,
+    "judge": "partial"
+  },
+  {
+    "n": 19,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr291",
+    "run": "2",
+    "path": "src/commands/up.rs",
+    "line": 26,
+    "judge": "nit"
+  },
+  {
+    "n": 20,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr293",
+    "run": "2",
+    "path": "src/commands/repair.rs",
+    "line": 193,
+    "judge": "valid"
+  },
+  {
+    "n": 21,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-seed-editor-shell",
+    "run": "2",
+    "path": "crates/navi-notifier/src/envfile.rs",
+    "line": 50,
+    "judge": "nit"
+  },
+  {
+    "n": 22,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr267",
+    "run": "0",
+    "path": "src/commands/status.rs",
+    "line": 57,
+    "judge": "wrong"
+  },
+  {
+    "n": 23,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr188",
+    "run": "2",
+    "path": "src/setup.rs",
+    "line": 303,
+    "expected": 0,
+    "judge": "yes"
+  },
+  {
+    "n": 24,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "navi-cb766245",
+    "run": "2",
+    "path": "crates/navi-notifier/src/upgrade.rs",
+    "line": 38,
+    "expected": 0,
+    "judge": "yes"
+  },
+  {
+    "n": 25,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr292",
+    "run": "2",
+    "path": "src/commands/run.rs",
+    "line": 153,
+    "judge": "wrong"
+  },
+  {
+    "n": 26,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr94",
+    "run": "0",
+    "path": "src/providers/github.rs",
+    "line": 63,
+    "judge": "nit"
+  },
+  {
+    "n": 27,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr125",
+    "run": "2",
+    "path": "src/providers/mod.rs",
+    "line": 187,
+    "expected": 0,
+    "judge": "yes"
+  },
+  {
+    "n": 28,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-seed-hhmm-hour-24",
+    "run": "0",
+    "path": "crates/navi-notifier/src/config.rs",
+    "line": 546,
+    "judge": "valid"
+  },
+  {
+    "n": 29,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-cb766245",
+    "run": "0",
+    "path": "crates/navi-notifier/src/cli.rs",
+    "line": 48,
+    "judge": "nit"
+  },
+  {
+    "n": 30,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-pr301",
+    "run": "1",
+    "path": "src/commands/up.rs",
+    "line": 37,
+    "judge": "nit"
+  },
+  {
+    "n": 31,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-c244e1c4",
+    "run": "0",
+    "path": "crates/navi-notifier-github/src/source.rs",
+    "line": 197,
+    "judge": "valid"
+  },
+  {
+    "n": 32,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr125",
+    "run": "1",
+    "path": "src/providers/mod.rs",
+    "line": 185,
+    "expected": 0,
+    "judge": "yes"
+  },
+  {
+    "n": 33,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "git-stk-pr303",
+    "run": "2",
+    "path": "src/commands/sync.rs",
+    "line": 263,
+    "expected": 0,
+    "judge": "partial"
+  },
+  {
+    "n": 34,
+    "kind": "match",
+    "config": "location-p1",
+    "unit": "navi-c244e1c4",
+    "run": "1",
+    "path": "crates/navi-notifier-github/src/source.rs",
+    "line": 130,
+    "expected": 1,
+    "judge": "yes"
+  },
+  {
+    "n": 35,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "git-stk-c0dfa614",
+    "run": "2",
+    "path": "src/providers.rs",
+    "line": 325,
+    "judge": "valid"
+  },
+  {
+    "n": 36,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-pr85",
+    "run": "2",
+    "path": "crates/navi-notifier-github/src/source.rs",
+    "line": 330,
+    "judge": "valid"
+  },
+  {
+    "n": 37,
+    "kind": "triage",
+    "config": "location-p1",
+    "unit": "navi-cf97c268",
+    "run": "2",
+    "path": "crates/navi-notifier-core/src/rules.rs",
+    "line": 96,
+    "judge": "valid"
+  }
+]

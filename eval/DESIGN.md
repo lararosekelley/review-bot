@@ -103,13 +103,19 @@ separate verification pass. A verification pass is judged on noise removed again
 - `harness/compare.py` compares two configurations with a paired bootstrap over units.
 - `harness/ensemble.py` estimates multi-pass reviews (union, or a 2-pass vote) from a
   configuration's independent reps.
-- `harness/check_judge.py` checks the judge's triage calls against the labeled sample.
-- `harness/sample_triage.py` writes a sample of the judge's triage calls to `labels/` for a person
-  to label, to check the judge.
+- `harness/check_judge.py` checks the judge's triage and match calls against a labeled sample;
+  `--person-only` skips labels a model wrote.
+- `harness/sample_triage.py` writes a sample of the judge's triage and match calls to `labels/` for
+  a person to label, skipping findings in earlier samples, and `--apply` reads the filled-in labels
+  back.
 - `mine/run_all.py` rebuilds the cases from git history and PR metadata.
 - `mine/pick_controls.py` lists merged PRs that qualify as controls, with the split each lands on.
 - `mine/check_seeds.py` checks that every seeded case still builds and passes its repo's tests; a
   seed the tests catch does not belong in the set.
+
+`labels/triage-sample` was labeled by Claude and used to tune the triage prompt, so it is not a fair
+check. `labels/judge-sample-2` is a fresh sample, from runs the prompt was not tuned on, for a person
+to label.
 
 ## Fidelity check
 
