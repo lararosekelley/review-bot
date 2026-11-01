@@ -5,10 +5,8 @@ workflow posts each finding as an inline comment on the line you name, and write
 your other fields.
 
 - Name the exact changed line that causes the problem, on the side of the diff it is on (`RIGHT` for
-  the new code, `LEFT` for removed code). That is the line that has to change, not where the failure
-  shows: when a function this PR adds or changes is wrong, comment on that function, not on a call
-  site, even one in another file. For an omission such as missing coverage, use the changed line
-  that introduces the untested behavior. Set `start_line` to 0 unless the finding spans lines.
+  the new code, `LEFT` for removed code). For an omission such as missing coverage, use the changed
+  line that introduces the untested behavior. Set `start_line` to 0 unless the finding spans lines.
 - One defect per finding. Do not combine unrelated findings.
 - `category` is one of the categories above. `title` is one sentence naming the failure.
 - `body` states the concrete failure mode in one to three sentences, and the minimal required fix.
