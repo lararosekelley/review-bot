@@ -1,0 +1,38 @@
+{
+  "id": "navi-seed-doctor-gitea-uses-gitlab",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "dev",
+  "pr": {
+    "number": 131,
+    "title": "feat(cli): validate config in `navi doctor` (static checks + --offline)",
+    "body": "feat(cli): validate config in `navi doctor` (static checks + --offline)\n\n<!-- git-stk:closes -->\nCloses #116\n<!-- /git-stk:closes -->",
+    "base_sha": "bd333dcc7b72d0e1dd3868631c4da77e8246dc19",
+    "head_sha": "c206ed28cc1cbe3111801ac564bbed6af03bf266",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-131",
+    "mutation": "wrong value that type-checks",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier/src/config.rs b/crates/navi-notifier/src/config.rs\nindex 4818401..4c2f831 100644\n--- a/crates/navi-notifier/src/config.rs\n+++ b/crates/navi-notifier/src/config.rs\n@@ -561,7 +561,7 @@ fn source_enabled(config: &Config, id: &str) -> bool {\n     match id {\n         \"github\" => config.github.enabled,\n         \"gitlab\" => config.gitlab.enabled,\n-        \"gitea\" => config.gitea.enabled,\n+        \"gitea\" => config.gitlab.enabled,\n         _ => false,\n     }\n }\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier/src/config.rs",
+      "line": 564,
+      "window": 5,
+      "alt": [],
+      "description": "source_enabled reports the gitlab enabled flag for \"gitea\", so doctor's route checks treat Gitea as enabled or disabled according to GitLab's setting.",
+      "severity": "medium",
+      "visibility": "medium",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

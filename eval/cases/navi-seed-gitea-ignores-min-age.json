@@ -1,0 +1,38 @@
+{
+  "id": "navi-seed-gitea-ignores-min-age",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "holdout",
+  "pr": {
+    "number": 65,
+    "title": "feat(config): comment_min_age_secs to settle edited comments",
+    "body": "feat(config): comment_min_age_secs to settle edited comments\n\n<!-- git-stk:description -->\nAdds `general.comment_min_age_secs` (default 0 = off): hold a comment until it's at least this old before notifying, so a bot that posts a placeholder and edits it in place (\"Claude Code is working\u2026\" \u2192 the finished review) settles to its final text and you get one accurate alert.\n\nA too-fresh comment is skipped *and* left out of the snapshot's seen-set, so it re-derives next poll and emits its settled body then. `created_at`-based, so edits within the window are captured on the re-fetch. Threaded through `DiffContext` for GitHub and Gitea.\n\nCloses #55.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #55\n<!-- /git-stk:closes -->",
+    "base_sha": "70102dff7d50d118386424ce88ca268b9bb79e75",
+    "head_sha": "da705992e9d789589c832bfc6582d5d6f53c5760",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-65",
+    "mutation": "setting applied to one provider but not another",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier-gitea/src/source.rs b/crates/navi-notifier-gitea/src/source.rs\nindex 747cc5a..790c419 100644\n--- a/crates/navi-notifier-gitea/src/source.rs\n+++ b/crates/navi-notifier-gitea/src/source.rs\n@@ -214,7 +214,7 @@ impl Source for GiteaSource {\n                 first_sight_since: first_sight_watermark(n.updated_at.as_deref()),\n                 // Gitea team review requests aren't modelled yet.\n                 viewer_teams: std::collections::HashSet::new(),\n-                comment_min_age: self.comment_min_age,\n+                comment_min_age: None,\n             };\n             let (evs, new_snapshot) = diff(&ctx, &pr_data, &old);\n \n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier-gitea/src/source.rs",
+      "line": 217,
+      "window": 5,
+      "alt": [],
+      "description": "The Gitea source passes comment_min_age: None to the diff, so the configured comment_min_age_secs it parses is ignored for Gitea while GitHub honors it.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

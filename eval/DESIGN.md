@@ -16,7 +16,9 @@ not committed.
 - **seeded**: a control PR with one injected defect that still builds and passes tests. `seed`
   holds the patch, the control it starts from, the kind of mutation, and the repo's test command.
   The mutations are modeled on real bugs in the source repos: a removed guard, an off-by-one bound,
-  unescaped shell interpolation, an ignored parameter or flag. Seeded cases carry most of the
+  unescaped shell interpolation, an ignored parameter or flag, a setting honored by one provider but
+  not another, a step skipped on one of two parallel paths, a wrong but well-typed value, and a
+  destructive default on error. Seeded cases carry most of the
   recall measurement, since few historical bugs are plainly visible in their diff, and are scored
   separately from historical ones.
 

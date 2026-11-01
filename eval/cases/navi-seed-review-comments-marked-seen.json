@@ -1,0 +1,38 @@
+{
+  "id": "navi-seed-review-comments-marked-seen",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "holdout",
+  "pr": {
+    "number": 65,
+    "title": "feat(config): comment_min_age_secs to settle edited comments",
+    "body": "feat(config): comment_min_age_secs to settle edited comments\n\n<!-- git-stk:description -->\nAdds `general.comment_min_age_secs` (default 0 = off): hold a comment until it's at least this old before notifying, so a bot that posts a placeholder and edits it in place (\"Claude Code is working\u2026\" \u2192 the finished review) settles to its final text and you get one accurate alert.\n\nA too-fresh comment is skipped *and* left out of the snapshot's seen-set, so it re-derives next poll and emits its settled body then. `created_at`-based, so edits within the window are captured on the re-fetch. Threaded through `DiffContext` for GitHub and Gitea.\n\nCloses #55.\n<!-- /git-stk:description -->\n\n<!-- git-stk:closes -->\nCloses #55\n<!-- /git-stk:closes -->",
+    "base_sha": "70102dff7d50d118386424ce88ca268b9bb79e75",
+    "head_sha": "da705992e9d789589c832bfc6582d5d6f53c5760",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-65",
+    "mutation": "missing call in one of two parallel paths",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier-forge/src/diff.rs b/crates/navi-notifier-forge/src/diff.rs\nindex 53ef786..867921e 100644\n--- a/crates/navi-notifier-forge/src/diff.rs\n+++ b/crates/navi-notifier-forge/src/diff.rs\n@@ -398,12 +398,7 @@ fn build_snapshot(\n             .collect(),\n         // A held (not-yet-settled) comment is intentionally left unseen so it is\n         // re-evaluated next poll, by which point its edits have landed.\n-        seen_review_comments: data\n-            .review_comments\n-            .iter()\n-            .filter(|c| is_settled(c.created_at.as_deref(), now, comment_min_age))\n-            .map(|c| c.id)\n-            .collect(),\n+        seen_review_comments: data.review_comments.iter().map(|c| c.id).collect(),\n         seen_issue_comments: data\n             .issue_comments\n             .iter()\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier-forge/src/diff.rs",
+      "line": 401,
+      "window": 5,
+      "alt": [],
+      "description": "build_snapshot marks every review comment as seen without the is_settled filter the issue comments get, so with comment_min_age set a fresh review comment is held on this poll and then skipped as already seen on the next, and is never delivered.",
+      "severity": "high",
+      "visibility": "low",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}
