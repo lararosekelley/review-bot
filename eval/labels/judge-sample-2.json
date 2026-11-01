@@ -7,7 +7,10 @@
     "run": "1",
     "path": "src/commands/run.rs",
     "line": 58,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "nit",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 2,
@@ -18,7 +21,10 @@
     "path": "crates/navi-notifier-github/tests/poll.rs",
     "line": 487,
     "expected": 0,
-    "judge": "partial"
+    "judge": "partial",
+    "label": "no",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 3,
@@ -28,7 +34,10 @@
     "run": "1",
     "path": "crates/navi-notifier/src/service.rs",
     "line": 134,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 4,
@@ -38,7 +47,10 @@
     "run": "2",
     "path": "src/stack/nav.rs",
     "line": 37,
-    "judge": "wrong"
+    "judge": "wrong",
+    "label": "nit",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 5,
@@ -49,7 +61,10 @@
     "path": "src/commands/run.rs",
     "line": 81,
     "expected": 0,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 6,
@@ -59,7 +74,10 @@
     "run": "2",
     "path": "src/commands/absorb.rs",
     "line": 146,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 7,
@@ -69,7 +87,10 @@
     "run": "1",
     "path": "src/tour/plan.rs",
     "line": 227,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "nit",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 8,
@@ -80,7 +101,10 @@
     "path": "tests/demo.rs",
     "line": 349,
     "expected": 0,
-    "judge": "partial"
+    "judge": "partial",
+    "label": "no",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 9,
@@ -90,7 +114,10 @@
     "run": "1",
     "path": "src/setup.rs",
     "line": 92,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 10,
@@ -100,7 +127,10 @@
     "run": "0",
     "path": "src/setup.rs",
     "line": 112,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 11,
@@ -110,7 +140,10 @@
     "run": "0",
     "path": "crates/navi-notifier/src/editor.rs",
     "line": 23,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 12,
@@ -120,7 +153,10 @@
     "run": "1",
     "path": "src/providers.rs",
     "line": 306,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 13,
@@ -130,7 +166,10 @@
     "run": "1",
     "path": "crates/navi-notifier/src/config.rs",
     "line": 578,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 14,
@@ -141,7 +180,10 @@
     "path": "crates/navi-notifier/src/service.rs",
     "line": 347,
     "expected": 0,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 15,
@@ -151,7 +193,10 @@
     "run": "2",
     "path": "crates/navi-notifier/src/cli.rs",
     "line": 68,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 16,
@@ -161,7 +206,10 @@
     "run": "2",
     "path": "crates/navi-notifier/src/config.rs",
     "line": 405,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 17,
@@ -172,7 +220,10 @@
     "path": "src/lock.rs",
     "line": 43,
     "expected": 1,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 18,
@@ -183,7 +234,10 @@
     "path": "src/commands/submit.rs",
     "line": 261,
     "expected": 0,
-    "judge": "partial"
+    "judge": "partial",
+    "label": "no",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 19,
@@ -193,7 +247,10 @@
     "run": "2",
     "path": "src/commands/up.rs",
     "line": 26,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 20,
@@ -203,7 +260,10 @@
     "run": "2",
     "path": "src/commands/repair.rs",
     "line": 193,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 21,
@@ -213,7 +273,10 @@
     "run": "2",
     "path": "crates/navi-notifier/src/envfile.rs",
     "line": 50,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 22,
@@ -223,7 +286,10 @@
     "run": "0",
     "path": "src/commands/status.rs",
     "line": 57,
-    "judge": "wrong"
+    "judge": "wrong",
+    "label": "wrong",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 23,
@@ -234,7 +300,10 @@
     "path": "src/setup.rs",
     "line": 303,
     "expected": 0,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 24,
@@ -245,7 +314,10 @@
     "path": "crates/navi-notifier/src/upgrade.rs",
     "line": 38,
     "expected": 0,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 25,
@@ -255,7 +327,10 @@
     "run": "2",
     "path": "src/commands/run.rs",
     "line": 153,
-    "judge": "wrong"
+    "judge": "wrong",
+    "label": "valid",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 26,
@@ -265,7 +340,10 @@
     "run": "0",
     "path": "src/providers/github.rs",
     "line": 63,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 27,
@@ -276,7 +354,10 @@
     "path": "src/providers/mod.rs",
     "line": 187,
     "expected": 0,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 28,
@@ -286,7 +367,10 @@
     "run": "0",
     "path": "crates/navi-notifier/src/config.rs",
     "line": 546,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 29,
@@ -296,7 +380,10 @@
     "run": "0",
     "path": "crates/navi-notifier/src/cli.rs",
     "line": 48,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 30,
@@ -306,7 +393,10 @@
     "run": "1",
     "path": "src/commands/up.rs",
     "line": 37,
-    "judge": "nit"
+    "judge": "nit",
+    "label": "nit",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 31,
@@ -316,7 +406,10 @@
     "run": "0",
     "path": "crates/navi-notifier-github/src/source.rs",
     "line": 197,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 32,
@@ -327,7 +420,10 @@
     "path": "src/providers/mod.rs",
     "line": 185,
     "expected": 0,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 33,
@@ -338,7 +434,10 @@
     "path": "src/commands/sync.rs",
     "line": 263,
     "expected": 0,
-    "judge": "partial"
+    "judge": "partial",
+    "label": "partial",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 34,
@@ -349,7 +448,10 @@
     "path": "crates/navi-notifier-github/src/source.rs",
     "line": 130,
     "expected": 1,
-    "judge": "yes"
+    "judge": "yes",
+    "label": "yes",
+    "label_confidence": "medium",
+    "label_source": "claude-blind"
   },
   {
     "n": 35,
@@ -359,7 +461,10 @@
     "run": "2",
     "path": "src/providers.rs",
     "line": 325,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "high",
+    "label_source": "claude-blind"
   },
   {
     "n": 36,
@@ -369,7 +474,10 @@
     "run": "2",
     "path": "crates/navi-notifier-github/src/source.rs",
     "line": 330,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "nit",
+    "label_confidence": "low",
+    "label_source": "claude-blind"
   },
   {
     "n": 37,
@@ -379,6 +487,9 @@
     "run": "2",
     "path": "crates/navi-notifier-core/src/rules.rs",
     "line": 96,
-    "judge": "valid"
+    "judge": "valid",
+    "label": "valid",
+    "label_confidence": "low",
+    "label_source": "claude-blind"
   }
 ]

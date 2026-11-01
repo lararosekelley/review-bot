@@ -114,8 +114,12 @@ separate verification pass. A verification pass is judged on noise removed again
   seed the tests catch does not belong in the set.
 
 `labels/triage-sample` was labeled by Claude and used to tune the triage prompt, so it is not a fair
-check. `labels/judge-sample-2` is a fresh sample, from runs the prompt was not tuned on, for a person
-to label.
+check. `labels/judge-sample-2` is a fresh sample, from runs the prompt was not tuned on. A separate
+Claude agent labeled it blind, from the code and without the judge's calls (`label_source:
+claude-blind`); it agreed with the judge on 29 of 37. The judge called 3 nits valid, and every
+match it graded partial the labels called no, so the judge errs lenient: noise and lenient recall
+read slightly better than they are. A person's labels, written into the sheet and read back with
+`--apply`, replace these.
 
 ## Fidelity check
 
