@@ -410,6 +410,19 @@ class Usage(unittest.TestCase):
         self.assertEqual(merged["merge"], "positional")
         self.assertEqual([f["votes"] for f in merged["findings"]], [2])
 
+    def test_dry_run_records_the_reported_line_beside_the_posted_one(self):
+        with tempfile.TemporaryDirectory() as d:
+            merged = Path(d, "merged.json")
+            merged.write_text(__import__("json").dumps(
+                {**pass_output([finding(line=16)]), "passes": 1, "passes_requested": 1, "min_votes": 1}))
+            out = Path(d, "findings.jsonl")
+            a = SimpleNamespace(merged=str(merged), prior=None, dry_run=str(out), show_usage="false",
+                                bot_name="B", footer="", pr=1, repo="o/r")
+            with mock.patch.object(review, "pr_diff", return_value=DIFF):
+                review.cmd_post(a)
+            row = __import__("json").loads(out.read_text().splitlines()[0])
+        self.assertEqual((row["line"], row["reportedLine"]), (14, 16))
+
 
 if __name__ == "__main__":
     unittest.main()

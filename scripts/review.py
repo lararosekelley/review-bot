@@ -625,7 +625,7 @@ def cmd_post(a):
             for n, f in enumerate(placed):
                 out.write(json.dumps({"path": f["path"], "line": f["posted_line"],
                                       "startLine": f["posted_start"] or None, "side": f["side"],
-                                      "body": inline_body(f, n), "status": "posted",
+                                      "reportedLine": f["line"], "body": inline_body(f, n), "status": "posted",
                                       "votes": f.get("votes", 1)}) + "\n")
             for f in unanchored:
                 out.write(json.dumps({"path": f["path"], "line": f["line"], "side": f["side"],

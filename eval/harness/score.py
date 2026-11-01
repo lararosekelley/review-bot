@@ -169,7 +169,8 @@ def score_run(run_dir, case, repo_dir, judge):
         if ei not in used_e and fi not in used_f:
             used_e.add(ei)
             used_f.add(fi)
-            matches.append({"expected": ei, "finding": fi, "at_location": located,
+            moved = posted[fi].get("reportedLine", posted[fi]["line"]) != posted[fi]["line"]
+            matches.append({"expected": ei, "finding": fi, "at_location": located, "anchor_moved": moved,
                             "verdict": "yes" if strict else "partial", "reason": reason})
 
     triage = []
@@ -212,8 +213,11 @@ def summarize(scores):
                            for m in s["matches"])
         return (hit / total, total) if total else (None, 0)
 
+    def yes_matches(runs):
+        return [m for s in runs for m in s["matches"] if m["verdict"] == "yes"]
+
     def location_accuracy(runs):
-        ms = [m for s in runs for m in s["matches"] if m["verdict"] == "yes"]
+        ms = yes_matches(runs)
         return sum(m["at_location"] for m in ms) / len(ms) if ms else None
 
     def per_run(runs, key):
@@ -224,6 +228,10 @@ def summarize(scores):
         "recall_strict": recall(hist, True), "recall_lenient": recall(hist, False),
         "recall_by_visibility": {v: recall(hist, True, v) for v in ("high", "medium", "low")},
         "location_accuracy": location_accuracy(hist),
+        # Matched findings anchoring moved off the line the model named; runs scored before the
+        # dry run recorded that line count as unmoved.
+        "anchor_moved_share": (lambda ms: sum(m.get("anchor_moved", False) for m in ms) / len(ms)
+                               if ms else None)(yes_matches(hist + seeded)),
         "seeded_recall_strict": recall(seeded, True), "seeded_recall_lenient": recall(seeded, False),
         "seeded_location_accuracy": location_accuracy(seeded),
         "posted_per_pr": per_run(ok, lambda s: s["posted"]),
