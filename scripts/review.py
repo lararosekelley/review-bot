@@ -403,6 +403,9 @@ def _summary(merged, posted, unanchored, bot_name, footer, previous_confidence, 
             note = (f"{requested - passes} of {requested} review passes failed. {note}"
                     + (" The vote threshold was lowered to match." if merged.get("votes_lowered") else ""))
         out += ["", f"<sub>{note}</sub>"]
+    if dropped := len(merged.get("dropped", ())):
+        out += ["", f"<sub>A verification pass dropped {dropped} finding{'s' * (dropped > 1)} it could not "
+                    "confirm; the job log lists them.</sub>"]
     if history:
         out += ["", usage_section(history)]
     if footer:

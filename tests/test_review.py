@@ -253,6 +253,11 @@ class FailedPasses(unittest.TestCase):
         self.assertIn("2 of 3 review passes failed", text)
         self.assertIn("vote threshold was lowered", text)
 
+    def test_summary_counts_dropped_findings(self):
+        merged = {**pass_output([]), "dropped": [{"title": "t", "path": "a", "line": 1, "reason": "r"}] * 2}
+        self.assertIn("verification pass dropped 2 findings", review.render_summary(merged, [], [], "Bot", "", None, {}))
+        self.assertNotIn("verification", review.render_summary(pass_output([]), [], [], "Bot", "", None, {}))
+
 
 def thread(tid, resolved=False, author="Bot", body=None, cid=1, last=None):
     body = body if body is not None else "**[Bug]** Stale photo stays painted.\n\nwhy\n\n" + review.FINDING_MARKER + " n=0 -->"
