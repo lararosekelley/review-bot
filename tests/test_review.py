@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 import tempfile
@@ -448,16 +449,18 @@ class Verify(unittest.TestCase):
 
     def test_verify_drops_and_counts_its_cost(self):
         out = {"total_cost_usd": 0.05, "usage": RESULT["usage"],
-               "structured_output": {"verdicts": [{"id": 0, "keep": False, "reason": "intended"}],
+               "structured_output": {"verdicts": [{"id": 0, "keep": False, "reason": "intended\n::error::x"}],
                                      "confidence": 90, "keep_coverage": False}}
         with tempfile.TemporaryDirectory() as d:
             merged = self.write_merged(d)
             proc = SimpleNamespace(stdout=__import__("json").dumps(out), stderr="", returncode=0)
-            with mock.patch.object(review.subprocess, "run", return_value=proc):
+            with mock.patch.object(review.subprocess, "run", return_value=proc), \
+                    mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
                 review.cmd_verify(SimpleNamespace(merged=str(merged), model="m", effort="", tools="Read"))
             result = __import__("json").loads(merged.read_text())
         self.assertEqual([f["line"] for f in result["findings"]], [12])
-        self.assertEqual(result["dropped"][0]["reason"], "intended")
+        self.assertEqual(result["dropped"][0]["reason"], "intended\n::error::x")
+        self.assertNotIn("\n::error::", stdout.getvalue())
         self.assertEqual(result["cost_usd"], 0.15)
         self.assertEqual(result["usage"]["total"]["output"], 1000)
         self.assertEqual(result["confidence"], 90)

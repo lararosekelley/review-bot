@@ -693,7 +693,8 @@ def cmd_verify(a):
     Path(a.merged).write_text(json.dumps(merged, indent=2) + "\n")
     print(f"verify: kept {len(kept)} of {len(findings)} in {time.time() - start:.1f}s, ${usage['cost_usd']:.3f}")
     for d in dropped:
-        print(f"  dropped {d['path']}:{d['line']} {d['title']} ({d['reason']})")
+        print(f"  dropped {one_line(d['path'], 300)}:{d['line']} {one_line(d['title'], 300)} "
+              f"({one_line(d['reason'], 500)})")
 
 
 def pr_diff(a):
