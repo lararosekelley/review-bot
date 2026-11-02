@@ -51,9 +51,9 @@ inputs:
     required: false
     default: "claude-haiku-4-5-20251001"
   verify:
-    description: "Check each finding against the code before posting, and drop those the check cannot confirm. Fewer nits, but more missed bugs, and one more call per review that has findings."
+    description: "Check each finding against the code before posting, and drop those it can rule out. Fewer nits, at the cost of one more call per review that has findings."
     required: false
-    default: "false"
+    default: "true"
   show-usage:
     description: "Add the review's estimated cost and token counts to the summary comment. The job's step summary always shows them."
     required: false

@@ -85,7 +85,7 @@ with:
 | `passes`               | `1`                         | Independent review passes, run in parallel. With more than one, only findings raised by at least `min-votes` passes are posted. |
 | `min-votes`            | auto                        | Passes that must raise a finding. Defaults to 1 for a single pass, 2 otherwise.                                                 |
 | `merge-model`          | `claude-haiku-4-5-20251001` | Model that groups duplicate findings across passes.                                                                             |
-| `verify`               | `false`                     | Rechecks each finding before posting. Cuts nits by about 40% without losing real bugs, for about a third more cost.             |
+| `verify`               | `true`                      | Rechecks each finding before posting. Cuts nits by about 40% without losing real bugs, for about a third more cost.             |
 | `claude-code-version`  | `2.1.301`                   | Claude Code CLI version the review passes run.                                                                                  |
 | `show-usage`           | `true`                      | Adds the PR's estimated cost and tokens so far to the summary, per review. The job's step summary always has them, per pass.    |
 | `bot-name`             | `Code Review Bot`           | The name it signs the summary with.                                                                                             |
