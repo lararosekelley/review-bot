@@ -1,0 +1,43 @@
+{
+  "id": "navi-seed-gitea-backfill-every-poll",
+  "repo": "lararosekelley/navi",
+  "kind": "seeded",
+  "split": "dev",
+  "pr": {
+    "number": 96,
+    "title": "feat(source): honor general.backfill on gitlab and gitea too",
+    "body": "Closes #91. Honor `general.backfill` on GitLab and Gitea too.\n\n`general.backfill` (#15) only affected GitHub \u2014 a global-looking knob silently ignored by the other two sources.\n\n### Change\n- **Gitea**: its new involved-PR sweep (#95) runs the forge diff, so it honors `first_sight_backfill` the same way GitHub does \u2014 first-run detection + `sweep_backfill` on the open sweep.\n- **GitLab**: its `mr_diff` baselined silently on first sight; now `MrContext.first_sight_backfill` lets `all_open` surface the MR's derivable activity on the first poll instead. `none`/`review_requests` stay silent (review requests come from the todos path, so `mr_diff` has none to backfill).\n\nAll three sources now read `config.general.backfill`; starter-config comment updated to say it applies to every source.\n\n### Tests\nGitLab `all_open_backfill_surfaces_on_first_sight` (default baselines silently; `all_open` fires `Merged` on first sight). Gitea rides the existing forge diff-mode tests + the #95 sweep path.",
+    "base_sha": "65d669577f1940a4d34080e939cc846f8b599893",
+    "head_sha": "34ace603279110e5fad70103cae099002ec5da62",
+    "commits": 1
+  },
+  "seed": {
+    "control": "navi-ctl-96",
+    "mutation": "step left out of one of two parallel paths",
+    "check": "cargo test --locked --no-fail-fast --workspace --jobs 8",
+    "patch": "diff --git a/crates/navi-notifier-gitea/src/source.rs b/crates/navi-notifier-gitea/src/source.rs\nindex 3f075a2..447817c 100644\n--- a/crates/navi-notifier-gitea/src/source.rs\n+++ b/crates/navi-notifier-gitea/src/source.rs\n@@ -455,10 +455,6 @@ impl Source for GiteaSource {\n         state\n             .put_cursor(SOURCE_ID, \"pr_closed_since\", &closed_since)\n             .await?;\n-        // Mark the initial catch-up done so later polls use normal first-sight.\n-        if first_run {\n-            state.put_cursor(SOURCE_ID, \"backfilled\", \"1\").await?;\n-        }\n \n         // One INFO summary of what this poll examined (see the GitHub source).\n         info!(\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "crates/navi-notifier-gitea/src/source.rs",
+      "line": 360,
+      "window": 5,
+      "alt": [
+        {
+          "path": "crates/navi-notifier-gitea/src/source.rs",
+          "line": 456
+        }
+      ],
+      "description": "The Gitea source never writes the backfilled cursor that GitLab writes after its first poll, so every poll counts as the first run: with backfill = none a newly involved PR is baselined silently on every poll and its recent activity is never surfaced, and with all_open each new PR replays its whole history.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

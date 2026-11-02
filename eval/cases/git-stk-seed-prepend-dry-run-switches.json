@@ -1,0 +1,38 @@
+{
+  "id": "git-stk-seed-prepend-dry-run-switches",
+  "repo": "lararosekelley/git-stk",
+  "kind": "seeded",
+  "split": "holdout",
+  "pr": {
+    "number": 182,
+    "title": "chore(cli): more consistent availability of --dry-run/-n in commands",
+    "body": "<!-- git-stk:closes -->\nCloses #168\n<!-- /git-stk:closes -->",
+    "base_sha": "a40195d5ad9cc3f900ac3028da23718c0b333b02",
+    "head_sha": "4a4bc79ddf9f5b8a2f284f032d761c55698246fe",
+    "commits": 1
+  },
+  "seed": {
+    "control": "git-stk-ctl-182",
+    "mutation": "side effect left outside a dry-run guard",
+    "check": "cargo test --locked --no-fail-fast --features test-fakes --jobs 8",
+    "patch": "diff --git a/src/stack/mod.rs b/src/stack/mod.rs\nindex 7bb986a..e9a49e9 100644\n--- a/src/stack/mod.rs\n+++ b/src/stack/mod.rs\n@@ -114,9 +114,9 @@ pub fn prepend_branch(branch: &str, dry_run: bool) -> Result<()> {\n         );\n     }\n \n+    git::checkout(&parent)?;\n     if !dry_run {\n         snapshot::take(\"new --prepend\");\n-        git::checkout(&parent)?;\n         git::create_branch(branch)?; // off the parent; leaves us on the new branch\n         set_parent(branch, &parent)?;\n         record_base(branch, &parent);\n"
+  },
+  "fix": null,
+  "expected": [
+    {
+      "path": "src/stack/mod.rs",
+      "line": 117,
+      "window": 5,
+      "alt": [],
+      "description": "prepend_branch checks out the parent before the dry_run guard, so `git stk new --prepend --dry-run` switches the user to the parent branch even though dry run promises to change nothing.",
+      "severity": "medium",
+      "visibility": "low",
+      "location_source": "manual"
+    }
+  ],
+  "prior_bot": {
+    "status": "n/a",
+    "comment_ids": [],
+    "note": "seeded"
+  }
+}

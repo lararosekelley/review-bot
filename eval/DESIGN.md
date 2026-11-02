@@ -17,8 +17,10 @@ not committed.
   holds the patch, the control it starts from, the kind of mutation, and the repo's test command.
   The mutations are modeled on real bugs in the source repos: a removed guard, an off-by-one bound,
   unescaped shell interpolation, an ignored parameter or flag, a setting honored by one provider but
-  not another, a step skipped on one of two parallel paths, a wrong but well-typed value, and a
-  destructive default on error. Seeded cases carry most of the
+  not another, a step skipped on one of two parallel paths, a wrong but well-typed value, a
+  destructive default on error, and a side effect left outside a dry-run guard. Some seeds remove
+  part of the PR's own change instead of editing a line, so the defect is an omission that only
+  code outside the diff reveals. Seeded cases carry most of the
   recall measurement, since few historical bugs are plainly visible in their diff, and are scored
   separately from historical ones.
 
