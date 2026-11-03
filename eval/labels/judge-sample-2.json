@@ -8,9 +8,13 @@
     "path": "src/commands/run.rs",
     "line": 58,
     "judge": "valid",
-    "label": "nit",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "valid",
+      "gpt-6-astra-tiebreak": "valid"
+    },
+    "label": "valid",
+    "label_source": "models"
   },
   {
     "n": 2,
@@ -22,9 +26,13 @@
     "line": 487,
     "expected": 0,
     "judge": "partial",
-    "label": "no",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "model_labels": {
+      "claude-blind": "no",
+      "gpt-6.1-sol": "partial",
+      "gpt-6-astra-tiebreak": "partial"
+    },
+    "label": "partial",
+    "label_source": "models"
   },
   {
     "n": 3,
@@ -35,9 +43,12 @@
     "path": "crates/navi-notifier/src/service.rs",
     "line": 134,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 4,
@@ -48,9 +59,13 @@
     "path": "src/stack/nav.rs",
     "line": 37,
     "judge": "wrong",
-    "label": "nit",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "wrong",
+      "gpt-6-astra-tiebreak": "wrong"
+    },
+    "label": "wrong",
+    "label_source": "models"
   },
   {
     "n": 5,
@@ -62,9 +77,12 @@
     "line": 81,
     "expected": 0,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 6,
@@ -75,9 +93,12 @@
     "path": "src/commands/absorb.rs",
     "line": 146,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 7,
@@ -88,9 +109,13 @@
     "path": "src/tour/plan.rs",
     "line": 227,
     "judge": "valid",
-    "label": "nit",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "valid",
+      "gpt-6-astra-tiebreak": "valid"
+    },
+    "label": "valid",
+    "label_source": "models"
   },
   {
     "n": 8,
@@ -102,9 +127,13 @@
     "line": 349,
     "expected": 0,
     "judge": "partial",
-    "label": "no",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "model_labels": {
+      "claude-blind": "no",
+      "gpt-6.1-sol": "partial",
+      "gpt-6-astra-tiebreak": "partial"
+    },
+    "label": "partial",
+    "label_source": "models"
   },
   {
     "n": 9,
@@ -115,9 +144,12 @@
     "path": "src/setup.rs",
     "line": 92,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 10,
@@ -128,9 +160,12 @@
     "path": "src/setup.rs",
     "line": 112,
     "judge": "nit",
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "nit"
+    },
     "label": "nit",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 11,
@@ -141,9 +176,13 @@
     "path": "crates/navi-notifier/src/editor.rs",
     "line": 23,
     "judge": "nit",
-    "label": "nit",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "valid",
+      "gpt-6-astra-tiebreak": "valid"
+    },
+    "label": "valid",
+    "label_source": "models"
   },
   {
     "n": 12,
@@ -154,9 +193,12 @@
     "path": "src/providers.rs",
     "line": 306,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 13,
@@ -167,9 +209,12 @@
     "path": "crates/navi-notifier/src/config.rs",
     "line": 578,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 14,
@@ -181,9 +226,12 @@
     "line": 347,
     "expected": 0,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 15,
@@ -194,9 +242,12 @@
     "path": "crates/navi-notifier/src/cli.rs",
     "line": 68,
     "judge": "nit",
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "nit"
+    },
     "label": "nit",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 16,
@@ -207,9 +258,12 @@
     "path": "crates/navi-notifier/src/config.rs",
     "line": 405,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 17,
@@ -221,9 +275,12 @@
     "line": 43,
     "expected": 1,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 18,
@@ -235,9 +292,12 @@
     "line": 261,
     "expected": 0,
     "judge": "partial",
+    "model_labels": {
+      "claude-blind": "no",
+      "gpt-6.1-sol": "no"
+    },
     "label": "no",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 19,
@@ -248,9 +308,12 @@
     "path": "src/commands/up.rs",
     "line": 26,
     "judge": "nit",
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "nit"
+    },
     "label": "nit",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 20,
@@ -261,9 +324,12 @@
     "path": "src/commands/repair.rs",
     "line": 193,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 21,
@@ -274,9 +340,12 @@
     "path": "crates/navi-notifier/src/envfile.rs",
     "line": 50,
     "judge": "nit",
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "nit"
+    },
     "label": "nit",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 22,
@@ -287,9 +356,12 @@
     "path": "src/commands/status.rs",
     "line": 57,
     "judge": "wrong",
+    "model_labels": {
+      "claude-blind": "wrong",
+      "gpt-6.1-sol": "wrong"
+    },
     "label": "wrong",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 23,
@@ -301,9 +373,12 @@
     "line": 303,
     "expected": 0,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 24,
@@ -315,9 +390,12 @@
     "line": 38,
     "expected": 0,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 25,
@@ -328,9 +406,12 @@
     "path": "src/commands/run.rs",
     "line": 153,
     "judge": "wrong",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 26,
@@ -341,9 +422,12 @@
     "path": "src/providers/github.rs",
     "line": 63,
     "judge": "nit",
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "nit"
+    },
     "label": "nit",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 27,
@@ -355,9 +439,12 @@
     "line": 187,
     "expected": 0,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 28,
@@ -368,9 +455,12 @@
     "path": "crates/navi-notifier/src/config.rs",
     "line": 546,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 29,
@@ -381,9 +471,12 @@
     "path": "crates/navi-notifier/src/cli.rs",
     "line": 48,
     "judge": "nit",
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "nit"
+    },
     "label": "nit",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 30,
@@ -394,9 +487,13 @@
     "path": "src/commands/up.rs",
     "line": 37,
     "judge": "nit",
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "valid",
+      "gpt-6-astra-tiebreak": "nit"
+    },
     "label": "nit",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 31,
@@ -407,9 +504,12 @@
     "path": "crates/navi-notifier-github/src/source.rs",
     "line": 197,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 32,
@@ -421,9 +521,12 @@
     "line": 185,
     "expected": 0,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 33,
@@ -435,9 +538,12 @@
     "line": 263,
     "expected": 0,
     "judge": "partial",
+    "model_labels": {
+      "claude-blind": "partial",
+      "gpt-6.1-sol": "partial"
+    },
     "label": "partial",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 34,
@@ -449,9 +555,12 @@
     "line": 130,
     "expected": 1,
     "judge": "yes",
+    "model_labels": {
+      "claude-blind": "yes",
+      "gpt-6.1-sol": "yes"
+    },
     "label": "yes",
-    "label_confidence": "medium",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 35,
@@ -462,9 +571,12 @@
     "path": "src/providers.rs",
     "line": 325,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "high",
-    "label_source": "claude-blind"
+    "label_source": "models"
   },
   {
     "n": 36,
@@ -475,9 +587,13 @@
     "path": "crates/navi-notifier-github/src/source.rs",
     "line": 330,
     "judge": "valid",
-    "label": "nit",
-    "label_confidence": "low",
-    "label_source": "claude-blind"
+    "model_labels": {
+      "claude-blind": "nit",
+      "gpt-6.1-sol": "valid",
+      "gpt-6-astra-tiebreak": "valid"
+    },
+    "label": "valid",
+    "label_source": "models"
   },
   {
     "n": 37,
@@ -488,8 +604,11 @@
     "path": "crates/navi-notifier-core/src/rules.rs",
     "line": 96,
     "judge": "valid",
+    "model_labels": {
+      "claude-blind": "valid",
+      "gpt-6.1-sol": "valid"
+    },
     "label": "valid",
-    "label_confidence": "low",
-    "label_source": "claude-blind"
+    "label_source": "models"
   }
 ]

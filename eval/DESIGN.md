@@ -116,12 +116,12 @@ separate verification pass. A verification pass is judged on noise removed again
   seed the tests catch does not belong in the set.
 
 `labels/triage-sample` was labeled by Claude and used to tune the triage prompt, so it is not a fair
-check. `labels/judge-sample-2` is a fresh sample, from runs the prompt was not tuned on. A separate
-Claude agent labeled it blind, from the code and without the judge's calls (`label_source:
-claude-blind`); it agreed with the judge on 29 of 37. The judge called 3 nits valid, and 3 of the
-4 matches it graded partial the labels called no, so the judge errs lenient: noise and lenient recall
-read slightly better than they are. A person's labels, written into the sheet and read back with
-`--apply`, replace these.
+check. `labels/judge-sample-2` is a fresh sample, from runs the prompt was not tuned on. Two models
+labeled it blind, from the code and without the judge's calls: a Claude agent and GPT-6.1 Sol
+(`model_labels`). Where they disagreed (8 of 37), GPT-6 Astra broke the tie after arguing both
+sides. The judge agrees with the resulting labels (`label_source: models`) on 34 of 37: it called
+one valid finding a nit and another wrong, and graded one unrelated finding a partial match, so its
+errors run both ways. A person's labels, written into the sheet and read back with `--apply`, replace these.
 
 ## Fidelity check
 
