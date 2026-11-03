@@ -57,7 +57,7 @@ permissions:
 jobs:
   review:
     uses: lararosekelley/review-bot/.github/workflows/review.yml@REF
-    secrets:
+WITH    secrets:
       anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 """
 SUMMARY_MARKER = "<!-- review-bot:summary -->"
@@ -81,9 +81,11 @@ def smoke_units(ids):
     return [every[i] for i in ids]
 
 
-def workflow(ref):
-    """The reusable workflow at `ref`, which runs the action from the same commit."""
-    return WORKFLOW_TEMPLATE.replace("REF", ref)
+def workflow(ref, inputs=()):
+    """The reusable workflow at `ref`, which runs the action from the same commit, with `inputs`
+    (KEY=VALUE strings) passed to it."""
+    lines = "".join(f"      {k}: {json.dumps(v)}\n" for k, v in (i.split("=", 1) for i in inputs))
+    return WORKFLOW_TEMPLATE.replace("REF", ref).replace("WITH", "    with:\n" + lines if lines else "")
 
 
 def tree(repo, commit, blob):
@@ -101,13 +103,13 @@ def cmd_cases(a):
 
 
 def cmd_push(a):
-    text = workflow(a.ref)
+    text = workflow(a.ref, a.inputs)
     open_heads = {p["headRefName"] for p in open_prs()}
     with tempfile.TemporaryDirectory(prefix="smoke-") as work:
         for unit in smoke_units(a.units):
-            branch = f"{BRANCH}{unit['id']}"
+            branch = f"{BRANCH}{unit['id']}" + (f"--{a.suffix}" if a.suffix else "")
             if f"{branch}/head" in open_heads:
-                print(f"{unit['id']}: already open, skipped")
+                print(f"{branch[len(BRANCH):]}: already open, skipped")
                 continue
             repo = replay.checkout(unit, a.src_root, Path(work))
             blob = run("git", "hash-object", "-w", "--stdin", cwd=repo, input=text)
@@ -120,7 +122,7 @@ def cmd_push(a):
                 f"{base}:refs/heads/{branch}/base", f"{head}:refs/heads/{branch}/head", cwd=repo)
             url = run("gh", "pr", "create", "--repo", SANDBOX, "--base", f"{branch}/base",
                       "--head", f"{branch}/head", "--title", pr["title"], "--body", pr["body"] or "")
-            print(f"{unit['id']}: {url}")
+            print(f"{branch[len(BRANCH):]}: {url}")
 
 
 def open_prs():
@@ -130,7 +132,7 @@ def open_prs():
 
 
 def unit_of(pr):
-    return pr["headRefName"][len(BRANCH):].removesuffix("/head")
+    return pr["headRefName"][len(BRANCH):].removesuffix("/head").split("--")[0]
 
 
 def pin_default_branch(ref):
@@ -187,7 +189,8 @@ def cmd_compare(a):
         summary = "ok" if len(summaries) == 1 else f"{len(summaries)} found"
         flag = (not counts or not min(counts) <= len(inline) <= max(counts) or len(summaries) != 1)
         problems += flag
-        print(f"{uid:<40}{len(inline):>6}{span:>12}  {common:>15}  {summary}{'  <- check' if flag else ''}")
+        label = pr["headRefName"][len(BRANCH):].removesuffix("/head")
+        print(f"{label:<40}{len(inline):>6}{span:>12}  {common:>15}  {summary}{'  <- check' if flag else ''}")
         if counts and a.verbose:
             print(f"    local mean {mean(counts):.1f}; {pr['url']}")
     if problems:
@@ -213,6 +216,10 @@ def main():
     push.add_argument("units", nargs="*", help="unit ids (default: smoke.json)")
     push.add_argument("--ref", required=True, help="review-bot tag, branch, or commit to run")
     push.add_argument("--src-root", type=Path, default=Path.home() / "Code/personal")
+    push.add_argument("--with", dest="inputs", action="append", default=[], metavar="KEY=VALUE",
+                      help="pass an input to the reusable workflow, e.g. harness=opencode")
+    push.add_argument("--suffix", default="", help="added to the branch names, so the same units can be "
+                      "opened again with other inputs")
     rere = sub.add_parser("rereview", help="ask every open smoke PR for a re-review")
     rere.add_argument("--ref", required=True, help="the ref the PRs were pushed with")
     comp = sub.add_parser("compare", help="compare the posted reviews with a replay configuration")
