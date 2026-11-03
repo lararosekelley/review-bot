@@ -91,6 +91,10 @@ between them. With opencode, the model gets the same read-only tools as with Cla
 own `opencode.json` is ignored, and `effort` picks the model's variant of that name when it has one.
 `extra-allowed-tools` entries with no opencode equivalent are left out.
 
+On a small sample of past PRs, `openai/gpt-6.1-sol` found about as many bugs as the default
+`claude-sonnet-5-5`, posted a few more nits, and cost about twice as much per review.
+`claude-opus-5-5` posted the fewest nits at about three times the cost.
+
 ### Permissions
 
 By default, only the **repo owner** can spend the API key. On a shared or org repo, widen it:
