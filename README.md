@@ -21,8 +21,8 @@ Add a `REPO_NOTES.md` when you want to teach it your specifics and your coverage
 
 ## Install
 
-Add `ANTHROPIC_API_KEY` as a repository secret, then create
-`.github/workflows/code-review.yml`:
+Add `ANTHROPIC_API_KEY` as a repository secret (or another provider's key; see
+[Other models](#other-models)), then create `.github/workflows/code-review.yml`:
 
 ```yaml
 name: "Code Review Bot"
@@ -48,15 +48,16 @@ concurrency:
 
 jobs:
   review:
-    uses: lararosekelley/review-bot/.github/workflows/review.yml@v1
+    uses: lararosekelley/review-bot/.github/workflows/review.yml@v2
     secrets:
       anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
 The `permissions` block is required.
 
-`@v1` follows each 1.x release; an exact tag such as `@v1.4.0` stays on that release. The workflow
-runs the action from its own commit, so either pin covers both.
+`@v2` follows each 2.x release; an exact tag such as `@v2.0.0` stays on that release. The workflow
+runs the action from its own commit, so either pin covers both. Coming from `@v1`, drop the
+`sticky-comment` and `include-fix-links` inputs if you set them; nothing else needs to change.
 
 That's it! Opening a PR triggers a review; commenting `@bot review` on a PR runs
 another one; replying `@bot` to one of its inline comments starts a conversation on that thread.

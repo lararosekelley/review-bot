@@ -57,7 +57,7 @@ jobs:
           fetch-depth: 1
           ref: ${{ steps.ref.outputs.ref }}
 
-      - uses: lararosekelley/review-bot@v1
+      - uses: lararosekelley/review-bot@v2
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           # The thorough option: finds more, costs about three times the default.

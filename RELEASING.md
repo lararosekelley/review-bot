@@ -1,6 +1,6 @@
 # Releasing
 
-Callers use the moving major tag (`@v1`), so a release reaches them as soon as it is tagged.
+Callers use the moving major tag (such as `@v2`), so a release reaches them as soon as it is tagged.
 
 1. Run the sandbox fidelity check on `main` (see "Fidelity check" in
    [eval/DESIGN.md](eval/DESIGN.md)) and read any PR it flags.
