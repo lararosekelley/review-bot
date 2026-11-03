@@ -8,6 +8,11 @@ name: "Code Review Bot"
 on:
   workflow_call:
     inputs:
+      harness:
+        description: "What runs the model: claude-code, or opencode for other providers (model as provider/model)."
+        type: string
+        required: false
+        default: "claude-code"
       model:
         description: "Model id."
         type: string
@@ -29,10 +34,10 @@ on:
         required: false
         default: 0
       merge-model:
-        description: "Model that groups duplicate findings across passes."
+        description: "Model that groups duplicate findings across passes. Empty for the harness's default."
         type: string
         required: false
-        default: "claude-haiku-4-5-20251001"
+        default: ""
       verify:
         description: "Check each finding against the code before posting, and drop those it can rule out."
         type: boolean
@@ -48,6 +53,11 @@ on:
         type: string
         required: false
         default: "2.1.301"
+      opencode-version:
+        description: "opencode version the reviews and replies run, with the opencode harness."
+        type: string
+        required: false
+        default: "2.2.5"
       bot-name:
         type: string
         required: false
@@ -88,8 +98,21 @@ on:
         required: false
         default: "Automated code review provided by [review-bot](https://github.com/lararosekelley/review-bot). Findings are advisory and should be vetted."
     secrets:
+      # Pass the key for the provider your model uses.
       anthropic-api-key:
-        required: true
+        required: false
+      openai-api-key:
+        required: false
+      gemini-api-key:
+        required: false
+      openrouter-api-key:
+        required: false
+      xai-api-key:
+        required: false
+      mistral-api-key:
+        required: false
+      deepseek-api-key:
+        required: false
 
 permissions:
   contents: read
@@ -168,7 +191,14 @@ jobs:
 
       - uses: ./.review-bot-action
         with:
+          harness: ${{ inputs.harness }}
           anthropic-api-key: ${{ secrets.anthropic-api-key }}
+          openai-api-key: ${{ secrets.openai-api-key }}
+          gemini-api-key: ${{ secrets.gemini-api-key }}
+          openrouter-api-key: ${{ secrets.openrouter-api-key }}
+          xai-api-key: ${{ secrets.xai-api-key }}
+          mistral-api-key: ${{ secrets.mistral-api-key }}
+          deepseek-api-key: ${{ secrets.deepseek-api-key }}
           model: ${{ inputs.model }}
           effort: ${{ inputs.effort }}
           passes: ${{ inputs.passes }}
@@ -176,6 +206,7 @@ jobs:
           merge-model: ${{ inputs.merge-model }}
           verify: ${{ inputs.verify }}
           claude-code-version: ${{ inputs.claude-code-version }}
+          opencode-version: ${{ inputs.opencode-version }}
           show-usage: ${{ inputs.show-usage }}
           trigger-phrase: ${{ inputs.trigger-phrase }}
           bot-name: ${{ inputs.bot-name }}

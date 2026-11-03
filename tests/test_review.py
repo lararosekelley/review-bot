@@ -110,9 +110,10 @@ class Find(unittest.TestCase):
         self.assertEqual(cmd[-3:], ["--output-format", "stream-json", "--verbose"])
 
 
-    def test_merge_command_has_no_tools(self):
-        cmd = review.merge_command([finding()], "haiku")
+    def test_merge_runs_with_no_tools(self):
+        cmd = review.pass_command(review.merge_prompt([finding()]), "{}", "haiku", "", "", transcript=False)
         self.assertEqual(cmd[cmd.index("--tools") + 1], "")
+        self.assertNotIn("--allowedTools", cmd)
         self.assertIn("id 1.0 (src/a.rs:11, Bug): t", cmd[2])
 
 
@@ -392,7 +393,7 @@ class Usage(unittest.TestCase):
                     "pass": i, "ok": i == 1, "cost_usd": 0.1, "usage": review.usage_of(RESULT),
                     "output": pass_output([]) if i == 1 else None}))
             out = Path(d, "merged.json")
-            review.cmd_merge(SimpleNamespace(in_dir=d, min_votes=0, merge_model="m", out=str(out)))
+            review.cmd_merge(SimpleNamespace(in_dir=d, min_votes=0, harness="claude-code", merge_model="m", out=str(out)))
             merged = __import__("json").loads(out.read_text())
         self.assertEqual(merged["cost_usd"], 0.2)
         self.assertEqual(merged["usage"]["total"]["output"], 1000)
@@ -410,7 +411,7 @@ class Usage(unittest.TestCase):
             out = Path(d, "merged.json")
             with mock.patch.object(review.subprocess, "run",
                                    side_effect=review.subprocess.TimeoutExpired("claude", 60)) as run:
-                review.cmd_merge(SimpleNamespace(in_dir=d, min_votes=0, merge_model="m", out=str(out)))
+                review.cmd_merge(SimpleNamespace(in_dir=d, min_votes=0, harness="claude-code", merge_model="m", out=str(out)))
             merged = __import__("json").loads(out.read_text())
         self.assertEqual(run.call_args.kwargs["env"]["MAX_THINKING_TOKENS"], "0")
         self.assertEqual(merged["merge"], "positional")
@@ -456,7 +457,7 @@ class Verify(unittest.TestCase):
             proc = SimpleNamespace(stdout=__import__("json").dumps(out), stderr="", returncode=0)
             with mock.patch.object(review.subprocess, "run", return_value=proc), \
                     mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
-                review.cmd_verify(SimpleNamespace(merged=str(merged), model="m", effort="", tools="Read"))
+                review.cmd_verify(SimpleNamespace(merged=str(merged), harness="claude-code", model="m", effort="", tools="Read"))
             result = __import__("json").loads(merged.read_text())
         self.assertEqual([f["line"] for f in result["findings"]], [12])
         self.assertEqual(result["dropped"][0]["reason"], "intended\n::error::x")
@@ -472,7 +473,7 @@ class Verify(unittest.TestCase):
             before = merged.read_text()
             with mock.patch.object(review.subprocess, "run",
                                    side_effect=review.subprocess.TimeoutExpired("claude", 600)):
-                review.cmd_verify(SimpleNamespace(merged=str(merged), model="m", effort="", tools="Read"))
+                review.cmd_verify(SimpleNamespace(merged=str(merged), harness="claude-code", model="m", effort="", tools="Read"))
             self.assertEqual(merged.read_text(), before)
 
     def test_malformed_check_posts_every_finding(self):
@@ -487,7 +488,7 @@ class Verify(unittest.TestCase):
                 before = merged.read_text()
                 proc = SimpleNamespace(stdout=stdout, stderr="", returncode=0)
                 with mock.patch.object(review.subprocess, "run", return_value=proc):
-                    review.cmd_verify(SimpleNamespace(merged=str(merged), model="m", effort="", tools="Read"))
+                    review.cmd_verify(SimpleNamespace(merged=str(merged), harness="claude-code", model="m", effort="", tools="Read"))
                 self.assertEqual(merged.read_text(), before)
 
 
@@ -530,7 +531,7 @@ class Reply(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             prompt = Path(d, "p.md")
             prompt.write_text("rules")
-            a = SimpleNamespace(prompt_file=str(prompt), repo="o/r", pr="5", comment_id="3", kind=kind, model="m",
+            a = SimpleNamespace(prompt_file=str(prompt), repo="o/r", pr="5", comment_id="3", kind=kind, harness="claude-code", model="m",
                                 effort="", tools="Read", footer="", ack_file=None)
             proc = SimpleNamespace(stdout=stdout, stderr="", returncode=0)
             with mock.patch.object(review, "gh_json", gh_json), \
@@ -564,6 +565,88 @@ class Reply(unittest.TestCase):
         with mock.patch.object(review, "gh_json", lambda *a, payload=None: paths.append(a[3]) or {"id": 1}):
             review.react("o/r", 5, "eyes", None, "review")
         self.assertEqual(paths, ["repos/o/r/pulls/comments/5/reactions"])
+
+
+def oc_events(text, cost=0.01, session="ses_1", error=None):
+    json = __import__("json")
+    rows = [{"type": "step_start", "sessionID": session, "part": {}}]
+    if error:
+        rows.append({"type": "error", "sessionID": session, "error": {"message": error}})
+    else:
+        rows += [{"type": "text", "sessionID": session, "part": {"text": text}},
+                 {"type": "step_finish", "sessionID": session, "part": {
+                     "cost": cost, "tokens": {"input": 100, "output": 10, "reasoning": 5,
+                                              "cache": {"read": 50, "write": 7}}}}]
+    return "\n".join(json.dumps(r) for r in rows)
+
+
+class Opencode(unittest.TestCase):
+    SCHEMA = {"type": "object", "additionalProperties": False, "required": ["body"],
+              "properties": {"body": {"type": "string"}, "n": {"type": "integer", "minimum": 0}}}
+
+    def test_config_denies_by_default_and_maps_the_allowlist(self):
+        config, ignored = review.opencode_config("Read,Glob,Grep,Bash(git diff:*),WebFetch")
+        perm = config["permission"]
+        self.assertEqual(perm["*"], "deny")
+        self.assertEqual([perm[t] for t in ("read", "glob", "list", "grep")], ["allow"] * 4)
+        self.assertEqual(perm["bash"], {"*": "deny", "git diff": "allow", "git diff *": "allow"})
+        self.assertEqual(ignored, ["WebFetch"])
+        self.assertNotIn("bash", review.opencode_config("Read")[0]["permission"])
+
+    def test_check_schema(self):
+        review.check_schema({"body": "x", "n": 2}, self.SCHEMA)
+        for bad in [{"n": 1}, {"body": 1}, {"body": "x", "extra": 1}, {"body": "x", "n": -1},
+                    {"body": "x", "n": True}, []]:
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                review.check_schema(bad, self.SCHEMA)
+
+    def test_json_reply_ignores_fences_and_prose(self):
+        self.assertEqual(review.json_reply('Here:\n```json\n{"body": "x"}\n```', self.SCHEMA), {"body": "x"})
+        with self.assertRaises(ValueError):
+            review.json_reply("no json here", self.SCHEMA)
+
+    def test_events_sum_cost_and_tokens(self):
+        run = review.opencode_events(oc_events('{"body": "x"}') + "\n" + oc_events('{"body": "y"}'))
+        self.assertEqual(run["text"], '{"body": "y"}')
+        self.assertAlmostEqual(run["cost_usd"], 0.02)
+        self.assertEqual(run["usage"], {"input": 200, "output": 30, "cache_read": 100, "cache_write": 14})
+        self.assertEqual(run["num_turns"], 2)
+
+    def run_opencode(self, outputs, effort="high"):
+        procs = [SimpleNamespace(stdout=o, stderr="", returncode=0) for o in outputs]
+        with mock.patch.object(review.subprocess, "run", side_effect=procs) as run, \
+                mock.patch("sys.stdout", new_callable=io.StringIO):
+            out = review.run_model("opencode", "P", __import__("json").dumps(self.SCHEMA), "openai/m", effort,
+                                   "Read", timeout=5)
+        return out, [c.args[0] for c in run.call_args_list], [c.kwargs["env"] for c in run.call_args_list]
+
+    def test_run_ignores_repo_config_and_isolates_home(self):
+        out, cmds, envs = self.run_opencode([oc_events('{"body": "ok"}')])
+        self.assertEqual(out["output"], {"body": "ok"})
+        self.assertEqual(cmds[0][:6], ["opencode", "run", "--standalone", "--format", "json", "-m"])
+        self.assertEqual(cmds[0][6], "openai/m#high")
+        self.assertIn("Output format", cmds[0][-1])
+        self.assertEqual(envs[0]["OPENCODE_DISABLE_PROJECT_CONFIG"], "1")
+        home = str(Path(envs[0]["OPENCODE_CONFIG"]).parent)
+        self.assertTrue(all(envs[0][f"XDG_{d}_HOME"].startswith(home) for d in ("CONFIG", "DATA", "STATE")))
+
+    def test_one_retry_in_the_same_session(self):
+        out, cmds, _ = self.run_opencode([oc_events("not json"), oc_events('{"body": "ok"}', cost=0.02)])
+        self.assertEqual(out["output"], {"body": "ok"})
+        self.assertEqual(cmds[1][cmds[1].index("-s") + 1], "ses_1")
+        self.assertAlmostEqual(out["cost_usd"], 0.03)
+        with self.assertRaises(review.Unusable):
+            self.run_opencode([oc_events("not json"), oc_events("still not")])
+
+    def test_unknown_variant_falls_back_to_the_default(self):
+        out, cmds, _ = self.run_opencode([oc_events("", error="Variant unavailable for openai/m: high"),
+                                          oc_events('{"body": "ok"}')])
+        self.assertEqual(cmds[1][6], "openai/m")
+        self.assertEqual(out["output"], {"body": "ok"})
+
+    def test_provider_error_is_unusable(self):
+        with self.assertRaises(review.Unusable):
+            self.run_opencode([oc_events("", error="invalid api key")], effort="")
 
 
 if __name__ == "__main__":

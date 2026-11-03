@@ -7,8 +7,9 @@
 
 ---
 
-A GitHub Action that reviews your pull requests with Claude. Bring an Anthropic API key, pick a
-model, and you get a bot that posts inline findings and one summary with a confidence score.
+A GitHub Action that reviews your pull requests with Claude, or with another provider's model
+through [opencode](https://opencode.ai). Bring an API key, pick a model, and you get a bot that
+posts inline findings and one summary with a confidence score.
 
 It is tuned for **signal over volume**. It does not restate your linter's results or other CI findings, and it does not
 post a hypothesis it could not trace in the code. If the PR is clean, it says so in two lines.
@@ -67,6 +68,28 @@ resolves the thread when its token is allowed to; the default job token is not),
 a link to the summary when it has nothing new to post. A reply on a thread after "Fixed" brings
 that finding back into the next re-review.
 
+### Other models
+
+To review with a model from OpenAI, Google, OpenRouter, xAI, Mistral, or DeepSeek, set `harness` to
+`opencode`, name the model as `provider/model`, and pass that provider's key:
+
+```yaml
+jobs:
+  review:
+    uses: lararosekelley/review-bot/.github/workflows/review.yml@v2
+    with:
+      harness: opencode
+      model: openai/gpt-6.1-sol
+    secrets:
+      openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+```
+
+The secrets are `anthropic-api-key`, `openai-api-key`, `gemini-api-key`, `openrouter-api-key`,
+`xai-api-key`, `mistral-api-key`, and `deepseek-api-key`. You can pass several and switch `model`
+between them. With opencode, the model gets the same read-only tools as with Claude Code, a repo's
+own `opencode.json` is ignored, and `effort` picks the model's variant of that name when it has one.
+`extra-allowed-tools` entries with no opencode equivalent are left out.
+
 ### Permissions
 
 By default, only the **repo owner** can spend the API key. On a shared or org repo, widen it:
@@ -78,24 +101,26 @@ with:
 
 ## Configure
 
-| Input                  | Default                     | What it does                                                                                                                    |
-| ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                | `claude-sonnet-5-5`         | Any current model id. `claude-opus-5-5` is more thorough and costs more per PR.                                                 |
-| `effort`               | `high`                      | `low`, `medium`, `high`, `xhigh`, or `""` to leave it unset. `xhigh` is the most thorough and the most expensive.               |
-| `passes`               | `1`                         | Independent review passes, run in parallel. With more than one, only findings raised by at least `min-votes` passes are posted. |
-| `min-votes`            | auto                        | Passes that must raise a finding. Defaults to 1 for a single pass, 2 otherwise.                                                 |
-| `merge-model`          | `claude-haiku-4-5-20251001` | Model that groups duplicate findings across passes.                                                                             |
-| `verify`               | `true`                      | Rechecks each finding before posting. Cuts nits by about 40% without losing real bugs, for about a third more cost.             |
-| `claude-code-version`  | `2.1.301`                   | Claude Code CLI version the reviews and replies run.                                                                            |
-| `show-usage`           | `true`                      | Adds the PR's estimated cost and tokens so far to the summary, per review. The job's step summary always has them, per pass.    |
-| `bot-name`             | `Code Review Bot`           | The name it signs the summary with.                                                                                             |
-| `repo-notes-file`      | –                           | Path to your repo-specific notes, e.g. `.github/review-bot/REPO_NOTES.md`.                                                      |
-| `repo-notes`           | –                           | The same thing inline, for a few lines you do not want in a file.                                                               |
-| `trigger-phrase`       | `@bot`                      | A comment with this phrase plus `review` runs a re-review; other mentions get a reply.                                          |
-| `allowed-associations` | `OWNER`                     | Comma-separated author associations allowed to trigger it. No spaces.                                                           |
-| `timeout-minutes`      | `20`                        | Job timeout.                                                                                                                    |
-| `footer`               | advisory notice             | Line appended to the summary. Set to `""` to omit.                                                                              |
-| `extra-allowed-tools`  | –                           | Extra tools appended to the allowlist.                                                                                          |
+| Input                  | Default             | What it does                                                                                                                    |
+| ---------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `harness`              | `claude-code`       | `claude-code` for Claude models, or `opencode` for other providers. See [Other models](#other-models).                          |
+| `model`                | `claude-sonnet-5-5` | Any current model id. `claude-opus-5-5` is more thorough and costs more per PR. With opencode, `provider/model`.                |
+| `effort`               | `high`              | `low`, `medium`, `high`, `xhigh`, or `""` to leave it unset. `xhigh` is the most thorough and the most expensive.               |
+| `passes`               | `1`                 | Independent review passes, run in parallel. With more than one, only findings raised by at least `min-votes` passes are posted. |
+| `min-votes`            | auto                | Passes that must raise a finding. Defaults to 1 for a single pass, 2 otherwise.                                                 |
+| `merge-model`          | auto                | Model that groups duplicate findings across passes. Defaults to `claude-haiku-4-5-20251001`, or to `model` with opencode.       |
+| `verify`               | `true`              | Rechecks each finding before posting. Cuts nits by about 40% without losing real bugs, for about a third more cost.             |
+| `claude-code-version`  | `2.1.301`           | Claude Code CLI version the reviews and replies run, with `harness: claude-code`.                                               |
+| `opencode-version`     | `2.2.5`             | opencode version the reviews and replies run, with `harness: opencode`.                                                         |
+| `show-usage`           | `true`              | Adds the PR's estimated cost and tokens so far to the summary, per review. The job's step summary always has them, per pass.    |
+| `bot-name`             | `Code Review Bot`   | The name it signs the summary with.                                                                                             |
+| `repo-notes-file`      | –                   | Path to your repo-specific notes, e.g. `.github/review-bot/REPO_NOTES.md`.                                                      |
+| `repo-notes`           | –                   | The same thing inline, for a few lines you do not want in a file.                                                               |
+| `trigger-phrase`       | `@bot`              | A comment with this phrase plus `review` runs a re-review; other mentions get a reply.                                          |
+| `allowed-associations` | `OWNER`             | Comma-separated author associations allowed to trigger it. No spaces.                                                           |
+| `timeout-minutes`      | `20`                | Job timeout.                                                                                                                    |
+| `footer`               | advisory notice     | Line appended to the summary. Set to `""` to omit.                                                                              |
+| `extra-allowed-tools`  | –                   | Extra tools appended to the allowlist.                                                                                          |
 
 Need custom triggers - branch filters, a different event set, extra steps in the job? Skip the
 reusable workflow and call the action directly. See [`examples/action.yml`](examples/action.yml).

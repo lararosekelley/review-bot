@@ -11,6 +11,8 @@
     review.py reply --prompt-file P --repo R --pr N --comment-id C --kind review|issue
                     --model M [--effort E] --tools T [--footer F] [--ack-file ack.json]
 
+find, merge, verify, and reply take --harness claude-code (the default) or opencode.
+
 The model only returns data (prompts/findings.schema.json); this script is the
 only thing that writes to the pull request. Model text is untrusted: it is
 length-capped and stripped of this script's markers before it is posted.
@@ -23,6 +25,7 @@ import re
 import statistics
 import subprocess
 import sys
+import tempfile
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -156,7 +159,8 @@ def anchor(finding, valid, slack=ANCHOR_SLACK):
     return (nearest[0][1], 0) if nearest else None
 
 
-SECRET_ENV = ("ANTHROPIC_API_KEY", "GH_TOKEN", "GITHUB_TOKEN")
+SECRET_ENV = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY", "XAI_API_KEY",
+              "MISTRAL_API_KEY", "DEEPSEEK_API_KEY", "GH_TOKEN", "GITHUB_TOKEN")
 CATEGORIES = {"Bug", "Safety", "Security", "Architecture", "Escape Hatch", "Complexity",
               "Error Handling", "Missing Coverage", "Surface Drift"}
 # GitHub rejects comments over 65,536 characters.
@@ -599,35 +603,208 @@ def cmd_prior(a):
     print(f"{len(prior)} prior findings")
 
 
+HARNESSES = ("claude-code", "opencode")
+
+
+class Unusable(Exception):
+    """A model call that finished without output the pipeline can use."""
+
+
 def pass_command(prompt, schema, model, effort, tools, transcript):
     cmd = ["claude", "-p", prompt, "--model", model]
     if effort:
         cmd += ["--effort", effort]
-    cmd += ["--allowedTools", tools, "--json-schema", schema]
+    cmd += ["--allowedTools", tools] if tools else ["--tools", ""]
+    cmd += ["--json-schema", schema]
     cmd += ["--output-format", "stream-json", "--verbose"] if transcript else ["--output-format", "json"]
     return cmd
 
 
-def run_pass(i, a, prompt, schema):
-    cmd = pass_command(prompt, schema, a.model, a.effort, a.tools, bool(a.transcript_dir))
-    start = time.time()
-    proc = subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL)
-    record = {"pass": i, "ok": False, "wall_s": round(time.time() - start, 1), "cost_usd": None}
+def run_claude(prompt, schema, model, effort, tools, timeout, transcript, env):
+    proc = subprocess.run(pass_command(prompt, schema, model, effort, tools, bool(transcript)),
+                          capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=timeout, env=env)
     stdout = proc.stdout
-    if a.transcript_dir:
-        Path(a.transcript_dir).mkdir(parents=True, exist_ok=True)
-        Path(a.transcript_dir, f"pass-{i}.jsonl").write_text(stdout)
+    if transcript:
+        Path(transcript).write_text(stdout)
         results = [e for e in map(_json_or_none, stdout.splitlines()) if e and e.get("type") == "result"]
         stdout = json.dumps(results[-1]) if results else ""
     try:
         out = json.loads(stdout)
-        record["cost_usd"] = out.get("total_cost_usd")
-        record["num_turns"] = out.get("num_turns")
-        record["usage"] = usage_of(out)
         result = out.get("structured_output") or json.loads(out["result"])
-        record.update(ok=True, output=result)
     except (json.JSONDecodeError, KeyError, TypeError) as e:
-        record["error"] = f"{type(e).__name__}: {proc.stderr.strip()[-500:] or proc.stdout.strip()[-500:]}"
+        raise Unusable(f"{type(e).__name__}: {proc.stderr.strip()[-500:] or proc.stdout.strip()[-500:]}") from e
+    return {"output": result, "cost_usd": out.get("total_cost_usd") or 0, "usage": usage_of(out),
+            "num_turns": out.get("num_turns")}
+
+
+# Claude Code tool names and the opencode permissions that grant the same access.
+OPENCODE_TOOLS = {"Read": ["read"], "Glob": ["glob", "list"], "Grep": ["grep"]}
+BASH_RULE = re.compile(r"Bash\((.+?):\*\)")
+
+
+def opencode_config(tools):
+    """Deny-by-default opencode permissions that allow what a Claude Code allowlist allows."""
+    allow, bash, ignored = {"*": "deny"}, {"*": "deny"}, []
+    for tool in filter(None, (t.strip() for t in tools.split(","))):
+        if m := BASH_RULE.fullmatch(tool):
+            bash[m[1]] = bash[f"{m[1]} *"] = "allow"
+        elif tool in OPENCODE_TOOLS:
+            allow.update(dict.fromkeys(OPENCODE_TOOLS[tool], "allow"))
+        else:
+            ignored.append(tool)
+    if len(bash) > 1:
+        allow["bash"] = bash
+    return {"$schema": "https://opencode.ai/config.json", "permission": allow}, ignored
+
+
+def check_schema(value, schema, at="$"):
+    """Raise ValueError unless `value` fits `schema`, for the JSON Schema subset our schemas use."""
+    kind = schema.get("type")
+    types = {"object": dict, "array": list, "string": str, "integer": int, "number": (int, float), "boolean": bool}
+    if kind and (not isinstance(value, types[kind]) or (kind in ("integer", "number") and isinstance(value, bool))):
+        raise ValueError(f"{at}: expected {kind}")
+    if "enum" in schema and value not in schema["enum"]:
+        raise ValueError(f"{at}: not one of {schema['enum']}")
+    if "minimum" in schema and value < schema["minimum"] or "maximum" in schema and value > schema["maximum"]:
+        raise ValueError(f"{at}: out of range")
+    if kind == "object":
+        props = schema.get("properties", {})
+        for key in schema.get("required", []):
+            if key not in value:
+                raise ValueError(f"{at}: missing {key}")
+        for key, item in value.items():
+            if key in props:
+                check_schema(item, props[key], f"{at}.{key}")
+            elif schema.get("additionalProperties") is False:
+                raise ValueError(f"{at}: unexpected {key}")
+    if kind == "array" and "items" in schema:
+        for i, item in enumerate(value):
+            check_schema(item, schema["items"], f"{at}[{i}]")
+
+
+def json_reply(text, schema):
+    """The JSON object in a model's last message, checked against the schema."""
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError("no JSON object in the reply")
+    value = json.loads(text[start:end + 1])
+    check_schema(value, schema)
+    return value
+
+
+JSON_INSTRUCTION = """
+
+---
+
+## Output format
+
+Reply with only a JSON object that matches this JSON Schema, with no other text:
+
+{schema}"""
+
+JSON_RETRY = "That reply could not be used: {error}. Reply again with only the JSON object."
+
+
+def opencode_events(stdout):
+    """The last message's text, the session id, cost, token usage, steps, and any error from
+    `opencode run --format json`."""
+    run = {"text": "", "session": None, "cost_usd": 0, "usage": usage_of(None), "num_turns": 0, "error": None}
+    for e in filter(None, map(_json_or_none, stdout.splitlines())):
+        run["session"] = run["session"] or e.get("sessionID")
+        part = e.get("part") or {}
+        if e.get("type") == "text":
+            run["text"] = part.get("text") or ""
+        elif e.get("type") == "step_finish":
+            tokens = part.get("tokens") or {}
+            cache = tokens.get("cache") or {}
+            run["cost_usd"] += part.get("cost") or 0
+            run["num_turns"] += 1
+            run["usage"] = add_usage(run["usage"], {
+                "input": tokens.get("input") or 0, "output": (tokens.get("output") or 0) + (tokens.get("reasoning") or 0),
+                "cache_read": cache.get("read") or 0, "cache_write": cache.get("write") or 0})
+        elif e.get("type") == "error":
+            run["error"] = (e.get("error") or {}).get("message") or "error"
+    return run
+
+
+def run_opencode(prompt, schema, model, effort, tools, timeout, transcript, env):
+    """One opencode session: the prompt, then at most one retry if the reply does not fit the schema.
+    A repo's own opencode config is ignored, so a pull request cannot widen the permissions, and
+    opencode's own config, logins, and sessions live in a fresh home, so only the API keys in the
+    environment are used."""
+    config, ignored = opencode_config(tools)
+    if ignored:
+        print(f"opencode: no equivalent for {', '.join(ignored)}; not allowed")
+    log = []
+    try:
+        return opencode_session(prompt, schema, model, effort, timeout, env, config, log)
+    finally:
+        if transcript:
+            Path(transcript).write_text("".join(log))
+
+
+def opencode_session(prompt, schema, model, effort, timeout, env, config, log):
+    """Run the session in a fresh opencode home, appending each call's raw output to `log`."""
+    with tempfile.TemporaryDirectory(prefix="review-bot-opencode-") as home:
+        Path(home, "opencode.json").write_text(json.dumps(config))
+        env = {**(env or os.environ), "OPENCODE_CONFIG": str(Path(home, "opencode.json")),
+               "OPENCODE_DISABLE_PROJECT_CONFIG": "1", "OPENCODE_DISABLE_AUTOUPDATE": "1",
+               **{f"XDG_{d}_HOME": str(Path(home, d.lower())) for d in ("CONFIG", "DATA", "STATE")}}
+
+        def call(message, model_id, session=None):
+            cmd = ["opencode", "run", "--standalone", "--format", "json", "-m", model_id]
+            cmd += ["-s", session] if session else []
+            proc = subprocess.run(cmd + [message], capture_output=True, text=True, stdin=subprocess.DEVNULL,
+                                  timeout=timeout, env=env)
+            log.append(proc.stdout)
+            return {**opencode_events(proc.stdout), "stderr": proc.stderr.strip()[-300:]}
+
+        first = prompt + JSON_INSTRUCTION.format(schema=schema)
+        model_id = f"{model}#{effort}" if effort else model
+        run = call(first, model_id)
+        if effort and "Variant unavailable" in (run["error"] or ""):
+            print(f"opencode: {model} has no {effort} variant; using its default")
+            model_id = model
+            run = call(first, model_id)
+        total = run
+        for retry in (False, True):
+            if run["error"]:
+                raise Unusable(f"{run['error']} {run['stderr']}".strip())
+            try:
+                result = json_reply(run["text"], json.loads(schema))
+                break
+            except ValueError as e:
+                if retry or not run["session"]:
+                    raise Unusable(f"{type(e).__name__}: {e}") from e
+                run = call(JSON_RETRY.format(error=e), model_id, run["session"])
+                total = {**run, "cost_usd": total["cost_usd"] + run["cost_usd"],
+                         "usage": add_usage(total["usage"], run["usage"]),
+                         "num_turns": total["num_turns"] + run["num_turns"]}
+    return {"output": result, "cost_usd": round(total["cost_usd"], 6), "usage": total["usage"],
+            "num_turns": total["num_turns"]}
+
+
+def run_model(harness, prompt, schema, model, effort, tools, timeout=None, transcript=None, env=None):
+    """Run one prompt through a harness and return its structured output, cost, and usage.
+    Raises Unusable, or TimeoutExpired, when there is no output to use."""
+    run = run_opencode if harness == "opencode" else run_claude
+    return run(prompt, schema, model, effort, tools, timeout, transcript, env)
+
+
+def run_pass(i, a, prompt, schema):
+    transcript = None
+    if a.transcript_dir:
+        Path(a.transcript_dir).mkdir(parents=True, exist_ok=True)
+        transcript = Path(a.transcript_dir, f"pass-{i}.jsonl")
+    start = time.time()
+    record = {"pass": i, "ok": False, "cost_usd": None}
+    try:
+        out = run_model(a.harness, prompt, schema, a.model, a.effort, a.tools, transcript=transcript)
+        record.update(ok=True, output=out["output"], cost_usd=out["cost_usd"], num_turns=out["num_turns"],
+                      usage=out["usage"])
+    except Unusable as e:
+        record["error"] = str(e)
+    record["wall_s"] = round(time.time() - start, 1)
     Path(a.out_dir, f"pass-{i}.json").write_text(json.dumps(record, indent=2) + "\n")
     return record
 
@@ -652,24 +829,20 @@ def cmd_find(a):
         sys.exit("every review pass failed")
 
 
-def merge_command(findings, model):
+def merge_prompt(findings):
     listing = "\n\n".join(
         f"id {f['id']} ({f['path']}:{f['line']}, {f['category']}): {f['title']}\n{f['body'][:600]}"
         for f in findings)
-    return ["claude", "-p", MERGE_PROMPT.format(findings=listing), "--model", model, "--tools", "",
-            "--json-schema", json.dumps(GROUP_SCHEMA), "--output-format", "json"]
+    return MERGE_PROMPT.format(findings=listing)
 
 
-def merge_with_model(findings, model):
+def merge_with_model(findings, harness, model):
     start = time.time()
     # Extended thinking turns a few seconds of grouping into minutes, and the groups come out the same.
-    proc = subprocess.run(merge_command(findings, model), capture_output=True, text=True,
-                          stdin=subprocess.DEVNULL, timeout=MERGE_TIMEOUT_S,
-                          env={**os.environ, "MAX_THINKING_TOKENS": "0"})
+    out = run_model(harness, merge_prompt(findings), json.dumps(GROUP_SCHEMA), model, "", "",
+                    timeout=MERGE_TIMEOUT_S, env={**os.environ, "MAX_THINKING_TOKENS": "0"})
     print(f"merge call: {time.time() - start:.1f}s")
-    out = json.loads(proc.stdout)
-    groups = (out.get("structured_output") or json.loads(out["result"]))["groups"]
-    return groups, {"cost_usd": out.get("total_cost_usd") or 0, **usage_of(out)}
+    return out["output"]["groups"], {"cost_usd": out["cost_usd"], **out["usage"]}
 
 
 def cmd_merge(a):
@@ -689,11 +862,11 @@ def cmd_merge(a):
     groups = [{"ids": [i], "keep": i} for i in ids]
     if len(passes) > 1 and findings:
         try:
-            groups, merge_usage = merge_with_model(findings, a.merge_model)
+            groups, merge_usage = merge_with_model(findings, a.harness, a.merge_model)
             method = "model"
             if not valid_groups(groups, ids):
                 raise ValueError("groups do not cover every finding exactly once")
-        except (ValueError, KeyError, TypeError, json.JSONDecodeError, subprocess.TimeoutExpired) as e:
+        except (Unusable, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as e:
             print(f"merge call unusable ({e}); grouping by location")
             groups, method = positional_groups(findings), "positional"
     merged = combine(passes, groups, min_votes)
@@ -718,18 +891,16 @@ def cmd_verify(a):
                            for i, f in enumerate(findings))
     prompt = VERIFY_PROMPT.format(confidence=merged["confidence"], coverage=merged["notes"].get("coverage") or "none",
                                   findings=listing)
-    cmd = pass_command(prompt, json.dumps(VERIFY_SCHEMA), a.model, a.effort, a.tools, transcript=False)
     start = time.time()
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL,
-                              timeout=VERIFY_TIMEOUT_S)
-        out = json.loads(proc.stdout)
-        result = out.get("structured_output") or json.loads(out["result"])
+        out = run_model(a.harness, prompt, json.dumps(VERIFY_SCHEMA), a.model, a.effort, a.tools,
+                        timeout=VERIFY_TIMEOUT_S)
+        result = out["output"]
         kept, dropped = apply_verdicts(findings, result["verdicts"])
         rescored, keep_coverage = min(max(int(result["confidence"]), 0), 100), bool(result["keep_coverage"])
-        usage = {"cost_usd": out.get("total_cost_usd") or 0, **usage_of(out)}
-    except (subprocess.TimeoutExpired, ValueError, KeyError, TypeError, AttributeError) as e:
-        return print(f"verify: check unusable ({type(e).__name__}); posting every finding")
+        usage = {"cost_usd": out["cost_usd"], **out["usage"]}
+    except (Unusable, subprocess.TimeoutExpired, ValueError, KeyError, TypeError, AttributeError) as e:
+        return print(f"verify: check unusable ({type(e).__name__}: {one_line(str(e), 300)}); posting every finding")
     if dropped:
         merged["confidence"] = rescored
         if not keep_coverage:
@@ -755,16 +926,14 @@ def cmd_reply(a):
     else:
         root, thread = None, [gh_json("api", f"repos/{a.repo}/issues/comments/{a.comment_id}")]
     prompt = Path(a.prompt_file).read_text() + "\n" + thread_section(thread, a.comment_id)
-    cmd = pass_command(prompt, json.dumps(REPLY_SCHEMA), a.model, a.effort, a.tools, transcript=False)
     start = time.time()
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, stdin=subprocess.DEVNULL,
-                              timeout=REPLY_TIMEOUT_S)
-        out = json.loads(proc.stdout)
-        text = (out.get("structured_output") or json.loads(out["result"]))["body"]
+        out = run_model(a.harness, prompt, json.dumps(REPLY_SCHEMA), a.model, a.effort, a.tools,
+                        timeout=REPLY_TIMEOUT_S)
+        text = out["output"]["body"]
         if not isinstance(text, str) or not text.strip():
             raise ValueError("empty reply")
-    except (subprocess.TimeoutExpired, ValueError, KeyError, TypeError, AttributeError) as e:
+    except (Unusable, subprocess.TimeoutExpired, ValueError, KeyError, TypeError, AttributeError) as e:
         sys.exit(f"reply: no usable reply ({type(e).__name__})")
     payload = {"body": reply_body(text, a.footer)}
     if root:
@@ -773,7 +942,7 @@ def cmd_reply(a):
     else:
         gh_json("api", "-X", "POST", f"repos/{a.repo}/issues/{a.pr}/comments", "--input", "-", payload=payload)
     react(a.repo, a.comment_id, "+1", a.ack_file, a.kind)
-    print(f"replied in {time.time() - start:.1f}s, ${out.get('total_cost_usd') or 0:.3f}")
+    print(f"replied in {time.time() - start:.1f}s, ${out['cost_usd']:.3f}")
 
 
 def pr_diff(a):
@@ -905,6 +1074,7 @@ def main():
     s.add_argument("--out", required=True)
     s.add_argument("--prompt-out", required=True)
     s = sub.add_parser("find")
+    s.add_argument("--harness", default="claude-code", choices=HARNESSES)
     s.add_argument("--prompt-file", required=True)
     s.add_argument("--passes", type=int, default=1)
     s.add_argument("--model", required=True)
@@ -913,11 +1083,13 @@ def main():
     s.add_argument("--out-dir", required=True)
     s.add_argument("--transcript-dir", help="also save each pass's full stream-json transcript here")
     s = sub.add_parser("merge")
+    s.add_argument("--harness", default="claude-code", choices=HARNESSES)
     s.add_argument("--in-dir", required=True)
     s.add_argument("--min-votes", type=int, default=0, help="0 picks 1 for one pass, 2 otherwise")
     s.add_argument("--merge-model", default="claude-haiku-4-5-20251001")
     s.add_argument("--out", required=True)
     s = sub.add_parser("verify")
+    s.add_argument("--harness", default="claude-code", choices=HARNESSES)
     s.add_argument("--merged", required=True, help="merged.json, rewritten with the findings kept")
     s.add_argument("--model", required=True)
     s.add_argument("--effort", default="")
@@ -935,6 +1107,7 @@ def main():
     s.add_argument("--ack-file", help="the eyes reaction to swap for +1 when the review is posted")
     s.add_argument("--dry-run", help="write placed findings here as JSONL instead of posting")
     s = sub.add_parser("reply")
+    s.add_argument("--harness", default="claude-code", choices=HARNESSES)
     s.add_argument("--prompt-file", required=True)
     s.add_argument("--repo", required=True)
     s.add_argument("--pr", required=True)
