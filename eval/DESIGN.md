@@ -46,9 +46,11 @@ review mode, then `review.py find`, `merge`, optionally `verify` (`--verify`), a
   the PR's last commit with its message, author, and dates kept, so the unseeded head is pruned too.
   Clones live in `~/.cache/review-bot-eval/work`, outside this repo, so the reviewer cannot reach
   the cases.
-- `--passes`, `--min-votes`, and `--merge-model` set the pipeline as the action's inputs do.
-- `claude -p` runs with an isolated `HOME` and `ANTHROPIC_API_KEY`, as in CI, so user settings,
-  plugins, and memory do not leak in. The checkout's own `CLAUDE.md` still loads, as in CI.
+- `--harness`, `--passes`, `--min-votes`, and `--merge-model` set the pipeline as the action's
+  inputs do. With `--harness opencode`, `--model` is `provider/model`.
+- The harness runs with an isolated `HOME` and only the API key its model needs, as in CI, so user
+  settings, logins, plugins, and memory do not leak in. The checkout's own `CLAUDE.md` still loads,
+  as in CI. opencode's model catalog is cached across runs in `~/.cache/review-bot-eval`.
 - A fake `gh` answers `pr view`, `pr diff`, and `pr checks` from the case and the checkout, and
   refuses everything else. Checks always pass.
 - The dry-run post places findings on the diff exactly as a real post would and writes them to

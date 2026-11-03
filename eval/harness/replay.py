@@ -1,13 +1,14 @@
-"""Replay eval cases through the review prompt with a local, headless Claude Code.
+"""Replay eval cases through the review prompt with a local, headless Claude Code or opencode.
 
 Each run reviews a pruned clone of the case's repo at the PR head, with the
 exact prompt and tool allowlist that scripts/assemble-prompt.sh produces. A
-fake `gh` and a fake inline-comment MCP server stand in for GitHub, and no
-GitHub token is passed, so nothing can be posted.
+fake `gh` stands in for GitHub, and no GitHub token is passed, so nothing can
+be posted.
 
     python3 -I eval/harness/replay.py eval/cases/git-stk-326.json \\
         --model claude-sonnet-5-5 --effort high --reps 3
     python3 -I eval/harness/replay.py --split dev --reps 3
+    python3 -I eval/harness/replay.py --split dev --harness opencode --model openai/gpt-6.1-sol
 
 Cases are grouped into units, one per PR (see units.py), and each unit is
 replayed once. Output per run, under eval/runs/<config>/<unit>/<rep>/:
@@ -37,6 +38,17 @@ NOTES_FILE = ".github/review-bot/REPO_NOTES.md"
 # Outside this repo, so a reviewer exploring around its checkout cannot reach
 # the cases and their expected bugs.
 WORK_ROOT = Path.home() / ".cache/review-bot-eval/work"
+# opencode's model catalog and provider packages, shared across runs so each run does not refetch them.
+OPENCODE_CACHE = Path.home() / ".cache/review-bot-eval/opencode-cache"
+# The key each opencode provider reads; a run gets only the one its model needs.
+PROVIDER_KEYS = {"anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "google": "GEMINI_API_KEY",
+                 "openrouter": "OPENROUTER_API_KEY", "xai": "XAI_API_KEY", "mistral": "MISTRAL_API_KEY",
+                 "deepseek": "DEEPSEEK_API_KEY"}
+
+
+def model_key(cfg):
+    """The API key variable a configuration's model needs."""
+    return PROVIDER_KEYS.get(cfg.model.split("/")[0]) if cfg.harness == "opencode" else "ANTHROPIC_API_KEY"
 
 
 def git(cwd, *args):
@@ -167,19 +179,20 @@ def run_one(case, repo_dir, cfg, out_dir):
         "HOME": str(home),
         "TMPDIR": str(tmp),
         "PATH": f"{bin_dir}:{os.environ['PATH']}",
-        "ANTHROPIC_API_KEY": os.environ["ANTHROPIC_API_KEY"],
+        model_key(cfg): os.environ[model_key(cfg)],
         "REPLAY_CASE": str(case_path),
         "REPLAY_GH_LOG": str(gh_log),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
+        **({"XDG_CACHE_HOME": str(OPENCODE_CACHE)} if cfg.harness == "opencode" else {}),
     }
     review = ["python3", "-I", str(bin_dir / "scripts/review.py")]
     steps = [
-        [*review, "find", "--prompt-file", str(prompt_file), "--passes", str(cfg.passes),
+        [*review, "find", "--harness", cfg.harness, "--prompt-file", str(prompt_file), "--passes", str(cfg.passes),
          "--model", cfg.model, "--effort", cfg.effort, "--tools", tools,
          "--out-dir", str(run_tmp / "passes"), "--transcript-dir", str(run_tmp / "transcripts")],
-        [*review, "merge", "--in-dir", str(run_tmp / "passes"), "--min-votes", str(cfg.min_votes),
+        [*review, "merge", "--harness", cfg.harness, "--in-dir", str(run_tmp / "passes"), "--min-votes", str(cfg.min_votes),
          "--merge-model", cfg.merge_model, "--out", str(run_tmp / "merged.json")],
-        *([[*review, "verify", "--merged", str(run_tmp / "merged.json"), "--model", cfg.model,
+        *([[*review, "verify", "--harness", cfg.harness, "--merged", str(run_tmp / "merged.json"), "--model", cfg.model,
              "--effort", cfg.effort, "--tools", tools]] if cfg.verify else []),
         [*review, "post", "--merged", str(run_tmp / "merged.json"), "--pr", str(case["pr"]["number"] or 0),
          "--dry-run", str(run_tmp / "findings.jsonl")],
@@ -210,7 +223,7 @@ def run_one(case, repo_dir, cfg, out_dir):
         if (out_dir / "passes").exists() else []
     merged = json.loads((out_dir / "merged.json").read_text()) if (out_dir / "merged.json").exists() else {}
     meta = {
-        "case": case["id"], "model": cfg.model, "effort": cfg.effort, "notes": cfg.notes,
+        "case": case["id"], "harness": cfg.harness, "model": cfg.model, "effort": cfg.effort, "notes": cfg.notes,
         "passes": cfg.passes, "min_votes": merged.get("min_votes"), "merge": merged.get("merge"),
         "verify": cfg.verify, "dropped": len(merged.get("dropped", [])),
         "status": status, "wall_s": round(time.time() - start, 1),
@@ -228,13 +241,14 @@ def main():
     p.add_argument("cases", nargs="*", type=Path, help="case files (default: every case)")
     p.add_argument("--split", choices=["dev", "holdout"])
     p.add_argument("--kind", choices=["historical", "seeded", "control"])
-    p.add_argument("--model", default="claude-sonnet-5-5")
+    p.add_argument("--harness", choices=["claude-code", "opencode"], default="claude-code")
+    p.add_argument("--model", default="claude-sonnet-5-5", help="with opencode, provider/model")
     p.add_argument("--effort", default="high")
     p.add_argument("--notes", choices=["head", "none"], default="head",
                    help="use the repo notes file present at the PR head, or none")
     p.add_argument("--passes", type=int, default=1)
     p.add_argument("--min-votes", type=int, default=0, help="0 picks 1 for one pass, 2 otherwise")
-    p.add_argument("--merge-model", default="claude-haiku-4-5-20251001")
+    p.add_argument("--merge-model", help="default: claude-haiku-4-5-20251001, or --model with opencode")
     p.add_argument("--verify", action="store_true", help="check the merged findings before posting")
     p.add_argument("--reps", type=int, default=1)
     p.add_argument("--jobs", type=int, default=2)
@@ -243,9 +257,12 @@ def main():
     p.add_argument("--src-root", type=Path, default=Path.home() / "Code/personal")
     p.add_argument("--work-root", type=Path, default=WORK_ROOT)
     cfg = p.parse_args()
-    if "ANTHROPIC_API_KEY" not in os.environ:
-        sys.exit("ANTHROPIC_API_KEY is required: replays run with an isolated HOME, like CI.")
-    name = cfg.config or (f"{cfg.model}-{cfg.effort or 'unset'}-p{cfg.passes}-notes_{cfg.notes}"
+    cfg.merge_model = cfg.merge_model or (cfg.model if cfg.harness == "opencode" else "claude-haiku-4-5-20251001")
+    key = model_key(cfg)
+    if not key or key not in os.environ:
+        sys.exit(f"{key or 'a known provider'} is required for {cfg.model}: replays run with an isolated HOME, "
+                 "like CI.")
+    name = cfg.config or (f"{cfg.model.replace('/', '_')}-{cfg.effort or 'unset'}-p{cfg.passes}-notes_{cfg.notes}"
                           + ("-verify" if cfg.verify else ""))
 
     jobs = []
