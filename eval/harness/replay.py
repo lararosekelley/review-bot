@@ -122,8 +122,6 @@ def assemble(case, repo_dir, cfg, prompt_file):
             "BOT_NAME": "Code Review Bot",
             "REPO_NOTES": "",
             "REPO_NOTES_FILE": notes,
-            "MODEL": cfg.model,
-            "EFFORT": cfg.effort,
             "EXTRA_TOOLS": "",
             "PROMPT_FILE": str(prompt_file),
             "PR_NUMBER": str(case["pr"]["number"] or 0),

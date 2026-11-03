@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Assembles the review agent's prompt and CLI args, and writes both to
-# $GITHUB_OUTPUT for the action's next step.
+# Assembles the review agent's prompt into $PROMPT_FILE, and writes its allowed
+# tools to $GITHUB_OUTPUT for the action's next steps.
 #
 # Lives here rather than inline in action.yml so shellcheck can see it: it
 # handles input a repository's maintainer controls. actionlint shellchecks
@@ -10,14 +10,13 @@
 #
 # Required in the environment (action.yml passes every one, so `set -u` firing
 # means the action and this script have drifted apart):
-#   MODE REPO_NOTES REPO_NOTES_FILE MODEL EFFORT EXTRA_TOOLS
+#   MODE REPO_NOTES REPO_NOTES_FILE EXTRA_TOOLS PROMPT_FILE
 #   PR_NUMBER PR_TITLE PR_DRAFT
 # MODE is "review" (a full review that returns structured findings) or
-# "conversation" (answering a comment). Optional:
+# "conversation" (answering a comment). PROMPT_FILE is where the prompt is
+# written. Optional:
 #   BOT_NAME     falls back to a default when unset
-#   FOOTER       conversation mode only; review mode renders it in the summary
 #   PRIOR_FILE   review mode: prior findings, one "- id N: path:line: title" per line
-#   PROMPT_FILE  also write the prompt to this file
 # Plus the runner's own GITHUB_ACTION_PATH, GITHUB_REPOSITORY,
 # GITHUB_EVENT_NAME, and GITHUB_OUTPUT.
 
@@ -39,7 +38,6 @@ if [ -n "$REPO_NOTES_FILE" ] && [ ! -f "$REPO_NOTES_FILE" ]; then
   exit 1
 fi
 
-prompt="$(mktemp)"
 {
   cat "$base"
   echo
@@ -51,10 +49,6 @@ prompt="$(mktemp)"
   echo "## Your identity"
   echo
   printf 'Your name is **%s**.\n' "${BOT_NAME:-Code Review Bot}"
-  if [ "$MODE" = conversation ] && [ -n "${FOOTER:-}" ]; then
-    echo
-    printf 'End your reply with this line, in italics, after a horizontal rule:\n\n*%s*\n' "$FOOTER"
-  fi
 
   if [ -n "$REPO_NOTES_FILE" ] || [ -n "$REPO_NOTES" ]; then
     echo
@@ -99,33 +93,10 @@ prompt="$(mktemp)"
   echo "- PR_TITLE: $PR_TITLE"
   echo "- PR_DRAFT: $PR_DRAFT"
   echo "- EVENT: $GITHUB_EVENT_NAME"
-} > "$prompt"
-
-if [ -n "${PROMPT_FILE:-}" ]; then
-  cp "$prompt" "$PROMPT_FILE"
-fi
-
-# Random delimiter: a notes file cannot close the heredoc and append step
-# outputs of its own.
-delim="PROMPT_$(openssl rand -hex 16)"
-{
-  echo "prompt<<$delim"
-  cat "$prompt"
-  echo "$delim"
-} >> "$GITHUB_OUTPUT"
-rm -f "$prompt"
+} > "$PROMPT_FILE"
 
 tools="Read,Glob,Grep,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(git log:*),Bash(git diff:*)"
-if [ "$MODE" = conversation ]; then
-  tools="$tools,mcp__github_inline_comment__create_inline_comment"
-fi
 if [ -n "$EXTRA_TOOLS" ]; then
   tools="$tools,$EXTRA_TOOLS"
 fi
 echo "tools=$tools" >> "$GITHUB_OUTPUT"
-
-args="--model $MODEL"
-if [ -n "$EFFORT" ]; then
-  args="$args --effort $EFFORT"
-fi
-echo "claude-args=$args --allowedTools \"$tools\"" >> "$GITHUB_OUTPUT"

@@ -63,17 +63,9 @@ inputs:
     required: false
     default: "@bot"
   claude-code-version:
-    description: "Claude Code CLI version the review passes run."
+    description: "Claude Code CLI version the reviews and replies run."
     required: false
     default: "2.1.301"
-  sticky-comment:
-    description: "Replies to comments: reuse one comment per PR instead of adding a new one each run."
-    required: false
-    default: "true"
-  include-fix-links:
-    description: "Replies to comments: add a one-click fix link to inline comments."
-    required: false
-    default: "true"
   footer:
     description: "Line appended to the summary. Empty to omit it."
     required: false
@@ -94,10 +86,10 @@ runs:
         COMMENT_BODY: ${{ github.event.comment.body || '' }}
       run: bash "$GITHUB_ACTION_PATH/scripts/mode.sh"
 
-    # Full review: parallel passes return findings as data, and the post step
-    # is the only thing that writes to the pull request.
-    - name: Set up review
-      if: steps.mode.outputs.mode == 'review'
+    # The model only ever returns data: findings for a review, the text of a
+    # reply for a conversation. The post and reply steps are the only things
+    # that write to the pull request.
+    - name: Set up
       shell: bash
       env:
         CLAUDE_CODE_VERSION: ${{ inputs.claude-code-version }}
@@ -136,8 +128,6 @@ runs:
         BOT_NAME: ${{ inputs.bot-name }}
         REPO_NOTES: ${{ inputs.repo-notes }}
         REPO_NOTES_FILE: ${{ inputs.repo-notes-file }}
-        MODEL: ${{ inputs.model }}
-        EFFORT: ${{ inputs.effort }}
         EXTRA_TOOLS: ${{ inputs.extra-allowed-tools }}
         PRIOR_FILE: ${{ runner.temp }}/review-bot/prior.md
         PROMPT_FILE: ${{ runner.temp }}/review-bot/prompt.md
@@ -217,7 +207,20 @@ runs:
         python3 "$GITHUB_ACTION_PATH/scripts/review.py" react --repo "$GITHUB_REPOSITORY"
         --comment-id "$COMMENT_ID" --content confused --ack-file "$WORK_DIR/ack.json"
 
-    # Replies to comments stay conversational, through claude-code-action.
+    # A reply acknowledges the comment at once, and swaps the reaction for a
+    # thumbs up once posted (or a confused face on failure).
+    - name: Acknowledge the comment
+      if: steps.mode.outputs.mode == 'conversation'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        COMMENT_ID: ${{ github.event.comment.id }}
+        KIND: ${{ github.event_name == 'pull_request_review_comment' && 'review' || 'issue' }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" react --repo "$GITHUB_REPOSITORY"
+        --comment-id "$COMMENT_ID" --kind "$KIND" --content eyes --ack-file "$WORK_DIR/ack.json"
+
     - id: assemble-conversation
       if: steps.mode.outputs.mode == 'conversation'
       shell: bash
@@ -226,10 +229,8 @@ runs:
         BOT_NAME: ${{ inputs.bot-name }}
         REPO_NOTES: ${{ inputs.repo-notes }}
         REPO_NOTES_FILE: ${{ inputs.repo-notes-file }}
-        FOOTER: ${{ inputs.footer }}
-        MODEL: ${{ inputs.model }}
-        EFFORT: ${{ inputs.effort }}
         EXTRA_TOOLS: ${{ inputs.extra-allowed-tools }}
+        PROMPT_FILE: ${{ runner.temp }}/review-bot/prompt.md
         PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
         PR_TITLE: ${{ github.event.pull_request.title || github.event.issue.title || '' }}
         PR_DRAFT: ${{ github.event.pull_request.draft || false }}
@@ -237,12 +238,31 @@ runs:
 
     - name: Reply
       if: steps.mode.outputs.mode == 'conversation'
-      uses: anthropics/claude-code-action@v1.0.217
-      with:
-        anthropic_api_key: ${{ inputs.anthropic-api-key }}
-        github_token: ${{ inputs.github-token }}
-        use_sticky_comment: ${{ inputs.sticky-comment }}
-        include_fix_links: ${{ inputs.include-fix-links }}
-        classify_inline_comments: "true"
-        prompt: ${{ steps.assemble-conversation.outputs.prompt }}
-        claude_args: ${{ steps.assemble-conversation.outputs.claude-args }}
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        COMMENT_ID: ${{ github.event.comment.id }}
+        KIND: ${{ github.event_name == 'pull_request_review_comment' && 'review' || 'issue' }}
+        MODEL: ${{ inputs.model }}
+        EFFORT: ${{ inputs.effort }}
+        TOOLS: ${{ steps.assemble-conversation.outputs.tools }}
+        FOOTER: ${{ inputs.footer }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" reply --prompt-file "$WORK_DIR/prompt.md"
+        --repo "$GITHUB_REPOSITORY" --pr "$PR_NUMBER" --comment-id "$COMMENT_ID" --kind "$KIND"
+        --model "$MODEL" --effort "$EFFORT" --tools "$TOOLS" --footer "$FOOTER" --ack-file "$WORK_DIR/ack.json"
+
+    - name: Report a failed reply
+      if: failure() && steps.mode.outputs.mode == 'conversation'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        WORK_DIR: ${{ runner.temp }}/review-bot
+        COMMENT_ID: ${{ github.event.comment.id }}
+        KIND: ${{ github.event_name == 'pull_request_review_comment' && 'review' || 'issue' }}
+      run: >-
+        python3 "$GITHUB_ACTION_PATH/scripts/review.py" react --repo "$GITHUB_REPOSITORY"
+        --comment-id "$COMMENT_ID" --kind "$KIND" --content confused --ack-file "$WORK_DIR/ack.json"

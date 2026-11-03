@@ -491,5 +491,80 @@ class Verify(unittest.TestCase):
                 self.assertEqual(merged.read_text(), before)
 
 
+class Reply(unittest.TestCase):
+    THREAD = [
+        {"id": 3, "in_reply_to_id": 1, "created_at": "2026-01-03", "user": {"login": "dev", "type": "User"},
+         "body": "@bot why?"},
+        {"id": 1, "created_at": "2026-01-01", "user": {"login": "bot", "type": "Bot"}, "body": "finding",
+         "path": "src/a.rs", "line": 11, "diff_hunk": "@@ -1 +1 @@\n+x"},
+        {"id": 2, "created_at": "2026-01-02", "user": {"login": "x", "type": "User"}, "body": "other thread"},
+    ]
+
+    def test_thread_of_keeps_the_thread_in_order(self):
+        self.assertEqual([c["id"] for c in review.thread_of(self.THREAD, 1)], [1, 3])
+
+    def test_thread_section_marks_the_asker_and_fences_bodies(self):
+        text = review.thread_section(review.thread_of(self.THREAD, 1), 3)
+        self.assertIn("`src/a.rs:11`", text)
+        self.assertIn("### @bot (bot)\n", text)
+        self.assertIn("### @dev (asking)", text)
+
+    def test_fence_outlasts_tildes_in_the_text(self):
+        self.assertTrue(review.fenced("a\n~~~~~~\nb").startswith("~~~~~~~text\n"))
+
+    def test_reply_body(self):
+        body = review.reply_body("hi <!-- review-bot:summary -->", "footer")
+        self.assertNotIn("review-bot:summary", body)
+        self.assertTrue(body.endswith("---\n\n*footer*"))
+        self.assertNotIn("---", review.reply_body("hi", " "))
+
+    def run_reply(self, stdout, kind="review"):
+        posts, reacts = [], []
+
+        def gh_json(*args, payload=None):
+            if "POST" in args:
+                posts.append((args[3], payload))
+                return {}
+            return self.THREAD[0] if kind == "review" else {"id": 9, "body": "@bot hi", "user": {"login": "dev"}}
+
+        with tempfile.TemporaryDirectory() as d:
+            prompt = Path(d, "p.md")
+            prompt.write_text("rules")
+            a = SimpleNamespace(prompt_file=str(prompt), repo="o/r", pr="5", comment_id="3", kind=kind, model="m",
+                                effort="", tools="Read", footer="", ack_file=None)
+            proc = SimpleNamespace(stdout=stdout, stderr="", returncode=0)
+            with mock.patch.object(review, "gh_json", gh_json), \
+                    mock.patch.object(review, "gh_pages", return_value=self.THREAD), \
+                    mock.patch.object(review, "react", lambda *x: reacts.append(x)), \
+                    mock.patch.object(review.subprocess, "run", return_value=proc) as run, \
+                    mock.patch("sys.stdout", new_callable=io.StringIO):
+                review.cmd_reply(a)
+        return posts, reacts, run.call_args[0][0]
+
+    def test_reply_in_a_review_thread(self):
+        out = __import__("json").dumps({"structured_output": {"body": "Because."}, "total_cost_usd": 0.01})
+        posts, reacts, cmd = self.run_reply(out)
+        self.assertEqual(posts[0][0], "repos/o/r/pulls/5/comments/1/replies")
+        self.assertIn("Because.", posts[0][1]["body"])
+        self.assertEqual(reacts, [("o/r", "3", "+1", None, "review")])
+        self.assertIn("### @dev (asking)", cmd[2])
+
+    def test_reply_to_a_pr_comment(self):
+        out = __import__("json").dumps({"structured_output": {"body": "Sure."}})
+        posts, _, _ = self.run_reply(out, kind="issue")
+        self.assertEqual(posts[0][0], "repos/o/r/issues/5/comments")
+
+    def test_unusable_reply_posts_nothing(self):
+        for stdout in ["", "not json", __import__("json").dumps({"structured_output": {"body": " "}})]:
+            with self.subTest(stdout=stdout), self.assertRaises(SystemExit):
+                self.run_reply(stdout)
+
+    def test_react_on_a_review_comment(self):
+        paths = []
+        with mock.patch.object(review, "gh_json", lambda *a, payload=None: paths.append(a[3]) or {"id": 1}):
+            review.react("o/r", 5, "eyes", None, "review")
+        self.assertEqual(paths, ["repos/o/r/pulls/comments/5/reactions"])
+
+
 if __name__ == "__main__":
     unittest.main()

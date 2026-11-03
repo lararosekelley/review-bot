@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Installs the pinned Claude Code CLI that the review passes run, and creates
+# Installs the pinned Claude Code CLI that reviews and replies run, and creates
 # the run's working directory.
 #
 # Required in the environment: CLAUDE_CODE_VERSION, WORK_DIR.

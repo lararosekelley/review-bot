@@ -44,7 +44,7 @@ on:
         required: false
         default: true
       claude-code-version:
-        description: "Claude Code CLI version the review passes run."
+        description: "Claude Code CLI version the reviews and replies run."
         type: string
         required: false
         default: "2.1.301"

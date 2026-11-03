@@ -86,7 +86,7 @@ with:
 | `min-votes`            | auto                        | Passes that must raise a finding. Defaults to 1 for a single pass, 2 otherwise.                                                 |
 | `merge-model`          | `claude-haiku-4-5-20251001` | Model that groups duplicate findings across passes.                                                                             |
 | `verify`               | `true`                      | Rechecks each finding before posting. Cuts nits by about 40% without losing real bugs, for about a third more cost.             |
-| `claude-code-version`  | `2.1.301`                   | Claude Code CLI version the review passes run.                                                                                  |
+| `claude-code-version`  | `2.1.301`                   | Claude Code CLI version the reviews and replies run.                                                                            |
 | `show-usage`           | `true`                      | Adds the PR's estimated cost and tokens so far to the summary, per review. The job's step summary always has them, per pass.    |
 | `bot-name`             | `Code Review Bot`           | The name it signs the summary with.                                                                                             |
 | `repo-notes-file`      | –                           | Path to your repo-specific notes, e.g. `.github/review-bot/REPO_NOTES.md`.                                                      |
@@ -126,8 +126,9 @@ and never writes to the PR: [`scripts/review.py`](scripts/review.py) places each
 posts them as one review, and keeps one summary comment per PR up to date. With `passes` above 1,
 the passes run in parallel and a merge step groups duplicates and drops findings too few passes
 raised. A finding that cannot be placed on a changed line is listed in the summary instead. Replies
-to comments go through [`anthropics/claude-code-action`](https://github.com/anthropics/claude-code-action),
-with [`prompts/OUTPUT_CONVERSATION.md`](prompts/OUTPUT_CONVERSATION.md) in place of the review output.
+to comments work the same way, with [`prompts/OUTPUT_CONVERSATION.md`](prompts/OUTPUT_CONVERSATION.md)
+in place of the review output: the model reads the thread and returns the reply's text, and
+`review.py` posts it.
 
 The agent's first step is orientation: it reads `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` and
 your `.github/workflows/` to learn what CI checks, because **whatever CI checks, it never mentions**.
