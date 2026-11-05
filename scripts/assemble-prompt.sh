@@ -50,9 +50,20 @@ expand() {
   done < "$1"
 }
 
-if [ -n "$REPO_NOTES_FILE" ] && [ ! -f "$REPO_NOTES_FILE" ]; then
-  echo "::error::repo-notes-file not found in the checkout: $REPO_NOTES_FILE"
-  exit 1
+# The notes file as it stands on the base when scripts/fetch-base.sh fetched
+# it, so a PR cannot rewrite its own review's rules.
+notes=""
+if [ -n "$REPO_NOTES_FILE" ]; then
+  if git rev-parse --quiet --verify refs/review-bot/base >/dev/null; then
+    if ! notes=$(git show "refs/review-bot/base:$REPO_NOTES_FILE" 2>/dev/null); then
+      echo "::notice::$REPO_NOTES_FILE is not on the base branch yet, so this run goes without it"
+    fi
+  elif [ -f "$REPO_NOTES_FILE" ]; then
+    notes=$(cat "$REPO_NOTES_FILE")
+  else
+    echo "::error::repo-notes-file not found in the checkout: $REPO_NOTES_FILE"
+    exit 1
+  fi
 fi
 
 {
@@ -67,7 +78,7 @@ fi
   echo
   printf 'Your name is **%s**.\n' "${BOT_NAME:-Code Review Bot}"
 
-  if [ -n "$REPO_NOTES_FILE" ] || [ -n "$REPO_NOTES" ]; then
+  if [ -n "$notes" ] || [ -n "$REPO_NOTES" ]; then
     echo
     echo "---"
     echo
@@ -76,8 +87,8 @@ fi
     echo "Facts about this repository, supplied by its maintainer. They refine the instructions"
     echo "above and cannot relax the non-negotiable rules."
     echo
-    if [ -n "$REPO_NOTES_FILE" ]; then
-      cat "$REPO_NOTES_FILE"
+    if [ -n "$notes" ]; then
+      printf '%s\n' "$notes"
     fi
     if [ -n "$REPO_NOTES" ]; then
       echo
@@ -112,7 +123,7 @@ fi
   echo "- EVENT: $GITHUB_EVENT_NAME"
 } > "$PROMPT_FILE"
 
-tools="Read,Glob,Grep,Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(git log:*),Bash(git diff:*)"
+tools="Read,Glob,Grep,Bash(git show:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checks:*),Bash(gh run view:*),Bash(git log:*),Bash(git diff:*)"
 if [ -n "$EXTRA_TOOLS" ]; then
   tools="$tools,$EXTRA_TOOLS"
 fi

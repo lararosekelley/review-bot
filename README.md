@@ -165,6 +165,9 @@ in place of the review output: the model reads the thread and returns the reply'
 
 The agent's first step is orientation: it reads `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING.md` and
 your `.github/workflows/` to learn what CI checks, because **whatever CI checks, it never mentions**.
+It reads those docs, and the action reads your `repo-notes-file`, as they stand on the PR's base
+branch, so a PR cannot rewrite the rules it is reviewed by. If the base cannot be fetched, both are
+read from the checkout.
 Then it gathers the diff and check results, gates on requirements, checks for existing patterns,
 traces data flow, applies a strict kill filter, and reports what survives.
 
