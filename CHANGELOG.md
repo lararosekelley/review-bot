@@ -5,6 +5,18 @@ What changed in each version, for the people using the action. Each section is d
 publishes the section matching the tag as the GitHub release notes, so headings must stay
 `## X.Y.Z - YYYY-MM-DD`.
 
+## 2.1.0 - 2026-11-05
+
+### Changed
+
+- The repo notes file and the agent-facing docs (`CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`) are
+  read as they stand on the PR's base branch, so a PR cannot rewrite the rules it is reviewed by.
+  The action fetches the base commit for this; if it cannot, both are read from the checkout as
+  before. A notes file the PR adds takes effect once it is merged.
+- The rules for findings, the kill filter, the confidence score, and the verify pass's rules moved
+  to `prompts/rubric/`, so other tools can review by the same rules. The assembled review prompt is
+  unchanged apart from the note above.
+
 ## 2.0.0 - 2026-11-03
 
 ### Added
