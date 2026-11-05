@@ -171,6 +171,7 @@ def run_one(case, repo_dir, cfg, out_dir):
     shutil.copy(HERE / "fake_gh.py", bin_dir / "fake_gh.py")
     shutil.copy(ROOT / "scripts/review.py", bin_dir / "scripts/review.py")
     shutil.copy(ROOT / "prompts/findings.schema.json", bin_dir / "prompts/findings.schema.json")
+    shutil.copytree(ROOT / "prompts/rubric", bin_dir / "prompts/rubric")
     gh = bin_dir / "gh"
     gh.write_text(f'#!/bin/sh\nexec python3 -I {bin_dir / "fake_gh.py"} "$@"\n')
     gh.chmod(0o755)

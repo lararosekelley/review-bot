@@ -33,15 +33,32 @@ for f in "$base" "$output"; do
   test -f "$f" || { echo "::error::prompt file missing at $f"; exit 1; }
 done
 
+# Prints a prompt file with each `<!-- include: path -->` line replaced by the
+# file it names under prompts/, which holds the rules shared with other tools.
+expand() {
+  local line path
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      '<!-- include: '*' -->')
+        path="${line#'<!-- include: '}"
+        path="${path%' -->'}"
+        test -f "$prompts/$path" || { echo "::error::prompt file missing at $prompts/$path" >&2; exit 1; }
+        cat "$prompts/$path"
+        ;;
+      *) printf '%s\n' "$line" ;;
+    esac
+  done < "$1"
+}
+
 if [ -n "$REPO_NOTES_FILE" ] && [ ! -f "$REPO_NOTES_FILE" ]; then
   echo "::error::repo-notes-file not found in the checkout: $REPO_NOTES_FILE"
   exit 1
 fi
 
 {
-  cat "$base"
+  expand "$base"
   echo
-  cat "$output"
+  expand "$output"
 
   echo
   echo "---"

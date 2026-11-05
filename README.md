@@ -148,8 +148,11 @@ examples: a [Rust CLI](examples/REPO_NOTES-rust-cli.md) and a
 
 ## How it works
 
-[`prompts/BASE_PROMPT.md`](prompts/BASE_PROMPT.md) holds the review agent's rules and workflow, and
-[`prompts/OUTPUT_REVIEW.md`](prompts/OUTPUT_REVIEW.md) says what a review returns. The action
+[`prompts/BASE_PROMPT.md`](prompts/BASE_PROMPT.md) holds the review agent's workflow, and
+[`prompts/OUTPUT_REVIEW.md`](prompts/OUTPUT_REVIEW.md) says what a review returns. The rules for what
+counts as a finding, the kill filter, the confidence score, and the verify pass's rules live in
+[`prompts/rubric/`](prompts/rubric/), which the other two pull in, so other tools can review by the
+same rules: [git-stk](https://github.com/lararosekelley/git-stk)'s agent review keeps a copy. The action
 assembles the final prompt from them, your notes, earlier findings on the PR, and the PR context,
 then hands it to `claude -p` with a read-only tool allowlist and a JSON schema. The model returns its findings as data
 and never writes to the PR: [`scripts/review.py`](scripts/review.py) places each finding on the diff,

@@ -467,6 +467,16 @@ class Verify(unittest.TestCase):
         self.assertEqual(result["confidence"], 90)
         self.assertEqual(result["notes"]["coverage"], "")
 
+    def test_verify_prompt_carries_the_shared_rules(self):
+        with tempfile.TemporaryDirectory() as d:
+            merged = self.write_merged(d)
+            with mock.patch.object(review.subprocess, "run",
+                                   side_effect=review.subprocess.TimeoutExpired("claude", 600)) as run:
+                review.cmd_verify(SimpleNamespace(merged=str(merged), harness="claude-code", model="m", effort="", tools="Read"))
+            prompt = run.call_args.args[0][2]
+        self.assertIn(review.VERIFY_RULES.read_text().strip(), prompt)
+        self.assertIn("Coverage note: needs a test", prompt)
+
     def test_verify_failure_posts_every_finding(self):
         with tempfile.TemporaryDirectory() as d:
             merged = self.write_merged(d)
