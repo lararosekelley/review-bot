@@ -9,6 +9,7 @@ be posted.
         --model claude-sonnet-5-5 --effort high --reps 3
     python3 -I eval/harness/replay.py --split dev --reps 3
     python3 -I eval/harness/replay.py --split dev --harness opencode --model openai/gpt-6.1-sol
+    python3 -I eval/harness/replay.py --split dev --harness git-stk --git-stk ~/Code/personal/git-stk/target/debug/git-stk
 
 Cases are grouped into units, one per PR (see units.py), and each unit is
 replayed once. Output per run, under eval/runs/<config>/<unit>/<rep>/:
@@ -17,6 +18,8 @@ findings.jsonl, summary.md, meta.json, transcript.jsonl, gh.jsonl.
 
 import argparse
 import fcntl
+import re
+import shlex
 import hashlib
 import json
 import os
@@ -44,6 +47,12 @@ OPENCODE_CACHE = Path.home() / ".cache/review-bot-eval/opencode-cache"
 PROVIDER_KEYS = {"anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "google": "GEMINI_API_KEY",
                  "openrouter": "OPENROUTER_API_KEY", "xai": "XAI_API_KEY", "mistral": "MISTRAL_API_KEY",
                  "deepseek": "DEEPSEEK_API_KEY"}
+
+
+# git-stk's finding categories, as review-bot names them.
+GIT_STK_CATEGORIES = {"bug": "Bug", "safety": "Safety", "security": "Security", "architecture": "Architecture",
+                      "escape-hatch": "Escape Hatch", "error-handling": "Error Handling",
+                      "coverage": "Missing Coverage", "surface-drift": "Surface Drift", "complexity": "Complexity"}
 
 
 def model_key(cfg):
@@ -160,7 +169,8 @@ def run_one(case, repo_dir, cfg, out_dir):
         d.mkdir(parents=True)
     prompt_file = run_tmp / "prompt.md"
     tools = assemble(case, repo_dir, cfg, prompt_file)
-    shutil.copy(prompt_file, out_dir / "prompt.md")
+    if cfg.harness != "git-stk":
+        shutil.copy(prompt_file, out_dir / "prompt.md")
 
     case_path = run_tmp / "pr.json"
     # A seeded head differs from the recorded one.
@@ -187,6 +197,10 @@ def run_one(case, repo_dir, cfg, out_dir):
         **({"XDG_CACHE_HOME": str(OPENCODE_CACHE)} if cfg.harness == "opencode" else {}),
     }
     review = ["python3", "-I", str(bin_dir / "scripts/review.py")]
+    post = [*review, "post", "--merged", str(run_tmp / "merged.json"), "--pr", str(case["pr"]["number"] or 0),
+            "--dry-run", str(run_tmp / "findings.jsonl")]
+    if cfg.harness == "git-stk":
+        return finish(case, cfg, out_dir, run_tmp, *run_git_stk(case, repo_dir, cfg, run_tmp, env, post))
     steps = [
         [*review, "find", "--harness", cfg.harness, "--prompt-file", str(prompt_file), "--passes", str(cfg.passes),
          "--model", cfg.model, "--effort", cfg.effort, "--tools", tools,
@@ -195,13 +209,19 @@ def run_one(case, repo_dir, cfg, out_dir):
          "--merge-model", cfg.merge_model, "--out", str(run_tmp / "merged.json")],
         *([[*review, "verify", "--harness", cfg.harness, "--merged", str(run_tmp / "merged.json"), "--model", cfg.model,
              "--effort", cfg.effort, "--tools", tools]] if cfg.verify else []),
-        [*review, "post", "--merged", str(run_tmp / "merged.json"), "--pr", str(case["pr"]["number"] or 0),
-         "--dry-run", str(run_tmp / "findings.jsonl")],
+        post,
     ]
-    start, status, log = time.time(), "ok", []
+    start = time.time()
+    status, log = run_steps(steps, repo_dir, env, cfg)
+    return finish(case, cfg, out_dir, run_tmp, status, log, start)
+
+
+def run_steps(steps, cwd, env, cfg):
+    """Run each command in turn, stopping at the first that fails; return the status and their output."""
+    status, log = "ok", []
     for step in steps:
         try:
-            proc = subprocess.run(step, cwd=repo_dir, env=env, capture_output=True, text=True,
+            proc = subprocess.run(step, cwd=cwd, env=env, capture_output=True, text=True,
                                   timeout=cfg.timeout_min * 60)
             log.append(proc.stdout + proc.stderr)
             if proc.returncode:
@@ -210,12 +230,90 @@ def run_one(case, repo_dir, cfg, out_dir):
         except subprocess.TimeoutExpired:
             status = "timeout"
             break
+    return status, log
 
+
+def run_git_stk(case, repo_dir, cfg, run_tmp, env, post):
+    """Review one unit with git-stk's agent review (`git stk tour --findings`), then the action's dry-run post.
+
+    git-stk reviews a local branch against the trunk, so it runs in a clone of
+    the replay checkout made for this run, where its saved reviews cannot reach
+    another run. Its findings are posted as the action posts its own, so both
+    are scored the same way. A local review reads commit messages in place of
+    the PR description.
+    """
+    start = time.time()
+    branch = f"pr-{case['pr']['number'] or 0}"
+    work = run_tmp / "repo"
+    subprocess.run(["git", "clone", "--quiet", "--shared", "--no-checkout", str(repo_dir), str(work)], check=True)
+    git(work, "checkout", "--quiet", "-B", branch, f"origin/{branch}")
+    git(work, "branch", "--force", "main", case["pr"]["base_sha"])
+    git(work, "remote", "remove", "origin")
+
+    agent_log = run_tmp / "agent.jsonl"
+    agent = run_tmp / "bin" / "tour-agent"
+    effort = f" --effort {shlex.quote(cfg.effort)}" if cfg.effort else ""
+    prompts = run_tmp / "prompts"
+    prompts.mkdir()
+    agent.write_text("#!/bin/sh\nset -e\n"
+                     f"prompt=$(mktemp {shlex.quote(str(prompts))}/prompt-XXXXXX)\n"
+                     'cat > "$prompt"\n'
+                     f'reply=$(claude -p --model {shlex.quote(cfg.model)}{effort} --output-format json < "$prompt")\n'
+                     f"printf '%s\\n' \"$reply\" >> {shlex.quote(str(agent_log))}\n"
+                     "printf '%s\\n' \"$reply\"\n")
+    agent.chmod(0o755)
+    settings = {"stk.tourAgentAllowed": str(agent), "stk.tourVerify": str(cfg.verify).lower(),
+                "stk.noUpdateCheck": "true"}
+    stk_env = {**env, "GIT_CONFIG_COUNT": str(len(settings)),
+               **{f"GIT_CONFIG_{kind}_{i}": value for i, item in enumerate(settings.items())
+                  for kind, value in zip(("KEY", "VALUE"), item)}}
+    tour = [cfg.git_stk, "tour", branch, "--local", "--no-stack", "--findings", "--refresh-plan", "--agent", str(agent)]
+    try:
+        proc = subprocess.run(tour, cwd=work, env=stk_env, capture_output=True, text=True,
+                              timeout=cfg.timeout_min * 60)
+    except subprocess.TimeoutExpired:
+        return "timeout", [], start
+    log = [proc.stderr]
+    if proc.returncode:
+        return "error", log, start
+    review = json.loads(proc.stdout)
+    replies = [json.loads(line) for line in agent_log.read_text().splitlines() if line.strip()] \
+        if agent_log.exists() else []
+    dropped = re.search(r"dropped (\d+) it could rule out", proc.stderr)
+    merged = {
+        "summary": review["review"].get("title") or "",
+        "confidence": (review.get("assessment") or {}).get("confidence") or 0,
+        "findings": [git_stk_finding(f) for f in review["findings"]],
+        "prior": [], "notes": {"coverage": "", "ci": "", "praise": ""},
+        "passes": 1, "passes_requested": 1, "min_votes": 1,
+        "dropped": [{}] * int(dropped[1]) if dropped else [],
+        "cost_usd": round(sum(r.get("total_cost_usd") or 0 for r in replies), 4),
+        "num_turns": sum(r.get("num_turns") or 0 for r in replies),
+    }
+    (run_tmp / "merged.json").write_text(json.dumps(merged, indent=2) + "\n")
+    status, posted = run_steps([post], repo_dir, env, cfg)
+    return status, log + posted, start
+
+
+def git_stk_finding(f):
+    """A git-stk finding in the shape the action's post step reads."""
+    body = f["body"]
+    if f.get("evidence"):
+        body += f"\n\nEvidence: {f['evidence']}"
+    if f.get("suggestion"):
+        body += f"\n\n```suggestion\n{f['suggestion']}\n```"
+    return {"path": f["path"], "line": f["line"], "start_line": f.get("startLine") or 0,
+            "side": "LEFT" if f["side"] == "old" else "RIGHT",
+            "category": GIT_STK_CATEGORIES.get(f.get("category") or "", "Bug"), "title": f["title"], "body": body}
+
+
+def finish(case, cfg, out_dir, run_tmp, status, log, start):
+    """Copy a run's output into its directory and write its meta.json."""
     for src, dst in (("findings.jsonl", "findings.jsonl"), ("findings.summary.md", "summary.md"),
                      ("merged.json", "merged.json"), ("gh.jsonl", "gh.jsonl")):
         if (run_tmp / src).exists():
             shutil.copy(run_tmp / src, out_dir / dst)
-    for d in ("passes", "transcripts"):
+    for d in ("passes", "transcripts", "prompts"):
         if (run_tmp / d).exists():
             shutil.copytree(run_tmp / d, out_dir / d, dirs_exist_ok=True)
     shutil.rmtree(run_tmp, ignore_errors=True)
@@ -230,7 +328,7 @@ def run_one(case, repo_dir, cfg, out_dir):
         "status": status, "wall_s": round(time.time() - start, 1),
         "pass_wall_s": [p["wall_s"] for p in passes],
         "cost_usd": merged.get("cost_usd", sum(p.get("cost_usd") or 0 for p in passes)),
-        "num_turns": sum(p.get("num_turns") or 0 for p in passes),
+        "num_turns": merged.get("num_turns", sum(p.get("num_turns") or 0 for p in passes)),
         "log": "".join(log)[-4000:],
     }
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
@@ -242,7 +340,9 @@ def main():
     p.add_argument("cases", nargs="*", type=Path, help="case files (default: every case)")
     p.add_argument("--split", choices=["dev", "holdout"])
     p.add_argument("--kind", choices=["historical", "seeded", "control"])
-    p.add_argument("--harness", choices=["claude-code", "opencode"], default="claude-code")
+    p.add_argument("--harness", choices=["claude-code", "opencode", "git-stk"], default="claude-code",
+                   help="git-stk reviews with `git stk tour --findings`, its agent being `claude -p`")
+    p.add_argument("--git-stk", default="git-stk", help="the git-stk binary for --harness git-stk")
     p.add_argument("--model", default="claude-sonnet-5-5", help="with opencode, provider/model")
     p.add_argument("--effort", default="high")
     p.add_argument("--notes", choices=["head", "none"], default="head",
@@ -258,12 +358,15 @@ def main():
     p.add_argument("--src-root", type=Path, default=Path.home() / "Code/personal")
     p.add_argument("--work-root", type=Path, default=WORK_ROOT)
     cfg = p.parse_args()
+    if cfg.harness == "git-stk" and cfg.passes != 1:
+        p.error("--harness git-stk reviews in one pass")
     cfg.merge_model = cfg.merge_model or (cfg.model if cfg.harness == "opencode" else "claude-haiku-4-5-20251001")
     key = model_key(cfg)
     if not key or key not in os.environ:
         sys.exit(f"{key or 'a known provider'} is required for {cfg.model}: replays run with an isolated HOME, "
                  "like CI.")
-    name = cfg.config or (f"{cfg.model.replace('/', '_')}-{cfg.effort or 'unset'}-p{cfg.passes}-notes_{cfg.notes}"
+    name = cfg.config or (("git-stk-" if cfg.harness == "git-stk" else "")
+                          + f"{cfg.model.replace('/', '_')}-{cfg.effort or 'unset'}-p{cfg.passes}-notes_{cfg.notes}"
                           + ("-verify" if cfg.verify else ""))
 
     jobs = []
