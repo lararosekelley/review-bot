@@ -155,6 +155,13 @@ runs:
         python3 "$GITHUB_ACTION_PATH/scripts/review.py" prior --repo "$GITHUB_REPOSITORY" --pr "$PR_NUMBER"
         --out "$WORK_DIR/prior.json" --prompt-out "$WORK_DIR/prior.md"
 
+    - name: Fetch the base
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/fetch-base.sh"
+
     - id: assemble-review
       if: steps.mode.outputs.mode == 'review'
       shell: bash
