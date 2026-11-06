@@ -245,10 +245,13 @@ def run_git_stk(case, repo_dir, cfg, run_tmp, env, post):
     start = time.time()
     branch = f"pr-{case['pr']['number'] or 0}"
     work = run_tmp / "repo"
-    subprocess.run(["git", "clone", "--quiet", "--shared", "--no-checkout", str(repo_dir), str(work)], check=True)
-    git(work, "checkout", "--quiet", "-B", branch, f"origin/{branch}")
-    git(work, "branch", "--force", "main", case["pr"]["base_sha"])
-    git(work, "remote", "remove", "origin")
+    try:
+        git(None, "clone", "--quiet", "--shared", "--no-checkout", str(repo_dir), str(work))
+        git(work, "checkout", "--quiet", "-B", branch, f"origin/{branch}")
+        git(work, "branch", "--force", "main", case["pr"]["base_sha"])
+        git(work, "remote", "remove", "origin")
+    except subprocess.CalledProcessError as e:
+        return "error", [f"could not set up {branch} for git-stk: {e.stderr or e}"], start
 
     agent_log = run_tmp / "agent.jsonl"
     agent = run_tmp / "bin" / "tour-agent"
@@ -276,20 +279,23 @@ def run_git_stk(case, repo_dir, cfg, run_tmp, env, post):
     log = [proc.stderr]
     if proc.returncode:
         return "error", log, start
-    review = json.loads(proc.stdout)
-    replies = [json.loads(line) for line in agent_log.read_text().splitlines() if line.strip()] \
-        if agent_log.exists() else []
     dropped = re.search(r"dropped (\d+) it could rule out", proc.stderr)
-    merged = {
-        "summary": review["review"].get("title") or "",
-        "confidence": (review.get("assessment") or {}).get("confidence") or 0,
-        "findings": [git_stk_finding(f) for f in review["findings"]],
-        "prior": [], "notes": {"coverage": "", "ci": "", "praise": ""},
-        "passes": 1, "passes_requested": 1, "min_votes": 1,
-        "dropped": [{}] * int(dropped[1]) if dropped else [],
-        "cost_usd": round(sum(r.get("total_cost_usd") or 0 for r in replies), 4),
-        "num_turns": sum(r.get("num_turns") or 0 for r in replies),
-    }
+    try:
+        review = json.loads(proc.stdout)
+        replies = [json.loads(line) for line in agent_log.read_text().splitlines() if line.strip()] \
+            if agent_log.exists() else []
+        merged = {
+            "summary": review["review"].get("title") or "",
+            "confidence": (review.get("assessment") or {}).get("confidence") or 0,
+            "findings": [git_stk_finding(f) for f in review["findings"]],
+            "prior": [], "notes": {"coverage": "", "ci": "", "praise": ""},
+            "passes": 1, "passes_requested": 1, "min_votes": 1,
+            "dropped": [{}] * int(dropped[1]) if dropped else [],
+            "cost_usd": round(sum(r.get("total_cost_usd") or 0 for r in replies), 4),
+            "num_turns": sum(r.get("num_turns") or 0 for r in replies),
+        }
+    except (ValueError, KeyError, TypeError, AttributeError) as e:
+        return "error", log + [f"could not read git-stk's findings: {e!r}"], start
     (run_tmp / "merged.json").write_text(json.dumps(merged, indent=2) + "\n")
     status, posted = run_steps([post], repo_dir, env, cfg)
     return status, log + posted, start
