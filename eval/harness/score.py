@@ -150,8 +150,10 @@ def at_location(finding, exp):
 
 
 def score_run(run_dir, case, repo_dir, judge):
-    rows = [json.loads(r) for r in (run_dir / "findings.jsonl").read_text().splitlines() if r.strip()]
     meta = json.loads((run_dir / "meta.json").read_text())
+    # A failed run may stop before posting anything.
+    findings = run_dir / "findings.jsonl"
+    rows = [json.loads(r) for r in findings.read_text().splitlines() if r.strip()] if findings.exists() else []
     posted = [f for f in rows if f["status"] == "posted"]
 
     pairs = []
