@@ -51,9 +51,10 @@ review mode, then `review.py find`, `merge`, optionally `verify` (`--verify`), a
 - `--harness git-stk` reviews with git-stk's agent review instead (`git stk tour --findings`, its
   agent `claude -p` at `--model` and `--effort`), in a clone of the checkout made for the run, and
   `--verify` turns on its verify pass. `--git-stk` names the binary. Its findings go through the
-  same dry-run post, so both tools are scored alike. git-stk reviews a local branch, so it reads the
-  commit messages in place of the PR description, and gets `AGENTS.md`/`CLAUDE.md` rather than the
-  repo notes. Each run keeps the prompts git-stk sent under `prompts/`.
+  same dry-run post, so both tools are scored alike. git-stk reviews a local branch and reads its
+  description from commit messages, so the PR's title and description are added as an empty commit at
+  the branch tip. It gets `AGENTS.md`/`CLAUDE.md` rather than the repo notes. Each run keeps the
+  prompts git-stk sent under `prompts/` and its agent's replies, with their cost, in `agent.jsonl`.
 - The harness runs with an isolated `HOME` and only the API key its model needs, as in CI, so user
   settings, logins, plugins, and memory do not leak in. The checkout's own `CLAUDE.md` still loads,
   as in CI. opencode's model catalog is cached across runs in `~/.cache/review-bot-eval`.
