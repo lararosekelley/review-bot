@@ -239,8 +239,9 @@ def run_git_stk(case, repo_dir, cfg, run_tmp, env, post):
     git-stk reviews a local branch against the trunk, so it runs in a clone of
     the replay checkout made for this run, where its saved reviews cannot reach
     another run. Its findings are posted as the action posts its own, so both
-    are scored the same way. A local review reads commit messages in place of
-    the PR description.
+    are scored the same way. A local review reads its description from commit
+    messages, so the PR's title and description go in an empty commit at the
+    branch tip.
     """
     start = time.time()
     branch = f"pr-{case['pr']['number'] or 0}"
@@ -250,6 +251,9 @@ def run_git_stk(case, repo_dir, cfg, run_tmp, env, post):
         git(work, "checkout", "--quiet", "-B", branch, f"origin/{branch}")
         git(work, "branch", "--force", "main", case["pr"]["base_sha"])
         git(work, "remote", "remove", "origin")
+        if (case["pr"]["body"] or "").strip():
+            git(work, "-c", "user.name=replay", "-c", "user.email=replay@localhost", "commit", "--quiet",
+                "--allow-empty", "-m", case["pr"]["title"] or branch, "-m", case["pr"]["body"])
     except subprocess.CalledProcessError as e:
         return "error", [f"could not set up {branch} for git-stk: {e.stderr or e}"], start
 
@@ -316,7 +320,7 @@ def git_stk_finding(f):
 def finish(case, cfg, out_dir, run_tmp, status, log, start):
     """Copy a run's output into its directory and write its meta.json."""
     for src, dst in (("findings.jsonl", "findings.jsonl"), ("findings.summary.md", "summary.md"),
-                     ("merged.json", "merged.json"), ("gh.jsonl", "gh.jsonl")):
+                     ("merged.json", "merged.json"), ("gh.jsonl", "gh.jsonl"), ("agent.jsonl", "agent.jsonl")):
         if (run_tmp / src).exists():
             shutil.copy(run_tmp / src, out_dir / dst)
     for d in ("passes", "transcripts", "prompts"):
